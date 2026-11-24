@@ -427,3 +427,14 @@ def test_mcp_assess_live(fox_wav):
     d = r.structured_content
     assert d["text"] == WRONG and "coaching" in d and "features" not in d["words"][0]["phones"][0]
     assert json.loads(r.content[1].text)["prob"] == d["prob"]
+
+
+def test_serve_rejects_unavailable_cuda_before_listening(monkeypatch, capsys):
+    import onnxruntime as ort
+    from pronunciada import server
+    from pronunciada.__main__ import main
+
+    monkeypatch.setattr(ort, "get_available_providers", lambda: ["CPUExecutionProvider"])
+    monkeypatch.setattr(server, "ThreadingHTTPServer", lambda *args: pytest.fail("opened socket"))
+    assert main(["serve", "--device", "cuda"]) == 2
+    assert "onnxruntime-gpu" in capsys.readouterr().err

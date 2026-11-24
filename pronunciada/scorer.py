@@ -38,12 +38,15 @@ class Scorer:
                  calib_dir: str | None = None, sound_model: str | None = None,
                  prosody: bool = True, cache_size: int = 4, explain_away: bool | None = None,
                  delivery: bool | None = None,
-                 audio_check: bool = True, length: bool = True, frontend: bool = True):
+                 audio_check: bool = True, length: bool = True, frontend: bool = True,
+                 device: str = "cpu"):
         from .acoustic import AcousticModel
         from .adapter import Adapter
         from .text.base import normalize_lang
         from .variants import NativeStats
 
+        if device not in ("cpu", "cuda"):
+            raise ValueError("device must be cpu or cuda")
         self.lang = normalize_lang(lang)
         self.strictness = float(strictness)
         # frontend=False (pronunciada.core.score_phones): no text front-end is loaded; score() then
@@ -111,7 +114,8 @@ class Scorer:
             want_emb = sorted(extra_layers)      # round 19: stacks beyond the round-5 outputs
         if want_emb and delivery is True and os.environ.get("PRONUNCIADA_ALL_LAYERS") == "1":
             want_emb = "all"                     # training extraction: every encoder stack
-        self.am = AcousticModel(model, precision, threads, embeddings=want_emb)
+        providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if device == "cuda" else None
+        self.am = AcousticModel(model, precision, threads, providers=providers, embeddings=want_emb)
         self._word_layers = tuple(sorted(set(
             (["enc1"] if delivery is True else []) + list((self.word_score_proj or {}).get("layers", [])))))
         self.universal_name = cfg["universal_sound_model"]

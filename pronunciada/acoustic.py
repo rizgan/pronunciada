@@ -83,9 +83,9 @@ def _ld(field: int, payload: bytes) -> bytes:
     return _varint((field << 3) | 2) + _varint(len(payload)) + payload
 
 
-def _value_info(name: str) -> bytes:
+def _value_info(name: str, element_type: int = 1) -> bytes:
     shape = b"".join(_ld(1, _ld(2, f"{name}_d{k}".encode())) for k in range(3))
-    tensor = _varint(1 << 3) + _varint(1) + _ld(2, shape)
+    tensor = _varint(1 << 3) + _varint(element_type) + _ld(2, shape)
     return _ld(1, name.encode("utf-8")) + _ld(2, _ld(1, tensor))
 
 
@@ -127,6 +127,44 @@ def add_graph_outputs(model_bytes: bytes, names) -> bytes:
     raise ValueError("no graph in the ONNX model")
 
 
+def _metadata_fields(buf, start, end):
+    """Yield length-delimited protobuf fields without copying the model weights."""
+    while start < end:
+        key, start = _read_varint(buf, start)
+        wire = key & 7
+        if wire == 2:
+            size, start = _read_varint(buf, start)
+            if start + size > end:
+                raise ValueError("truncated ONNX metadata")
+            yield key >> 3, start, start + size
+            start += size
+        elif wire == 0:
+            _, start = _read_varint(buf, start)
+        elif wire in (1, 5):
+            start += 8 if wire == 1 else 4
+        else:
+            raise ValueError(f"unsupported protobuf wire type {wire}")
+
+
+def _override_outputs(src_path, start, end, names, fallback_type):
+    """Reuse graph.value_info when an override declares its own activation types."""
+    import mmap
+
+    wanted = {name.encode(): name for name in names}
+    found = {}
+    with open(src_path, "rb") as source, mmap.mmap(source.fileno(), 0, access=mmap.ACCESS_READ) as buf:
+        for field, i, j in _metadata_fields(buf, start, end):
+            if field != 13:  # GraphProto.value_info
+                continue
+            fields = {k: (a, b) for k, a, b in _metadata_fields(buf, i, j)}
+            if 1 in fields and 2 in fields:
+                a, b = fields[1]
+                name = wanted.get(buf[a:b])
+                if name is not None:
+                    found[name] = buf[i:j]
+    return b"".join(_ld(12, found.get(n) or _value_info(n, fallback_type)) for n in names)
+
+
 def _copy_range(src, dst, start: int, end: int, chunk: int = 1 << 22) -> None:
     src.seek(start)
     left = end - start
@@ -138,7 +176,7 @@ def _copy_range(src, dst, start: int, end: int, chunk: int = 1 << 22) -> None:
         left -= len(b)
 
 
-def write_with_graph_outputs(src_path: str, dest_path: str, names) -> None:
+def write_with_graph_outputs(src_path: str, dest_path: str, names, *, element_type: int = 1, use_metadata: bool = False) -> None:
     """add_graph_outputs from file to file, streamed in 4 MB chunks: the same bytes, but without
     holding the model in memory (three copies of it at once otherwise: ~1 GB for fp32)."""
     size = os.path.getsize(src_path)
@@ -159,7 +197,10 @@ def write_with_graph_outputs(src_path: str, dest_path: str, names) -> None:
             elif wt == 2:
                 ln, k = _read_varint(head, j)
                 if field == 7:
-                    extra = b"".join(_ld(12, _value_info(n)) for n in names)
+                    if use_metadata:
+                        extra = _override_outputs(src_path, i + k, i + k + ln, names, element_type)
+                    else:
+                        extra = b"".join(_ld(12, _value_info(n, element_type)) for n in names)
                     with open(dest_path, "wb") as out:
                         _copy_range(f, out, 0, i)
                         out.write(_varint((7 << 3) | 2) + _varint(ln + len(extra)))
@@ -175,6 +216,8 @@ def write_with_graph_outputs(src_path: str, dest_path: str, names) -> None:
 
 def _variant_path(src: str, outputs: dict) -> str:
     tag = "" if list(outputs) == list(EMBED_OUTPUTS) else "-" + "-".join(outputs)
+    if src.endswith(".fp16.onnx"):
+        tag = "-fp16" + tag  # Do not reuse older variants that declared float32 outputs.
     return src[:-len(".onnx")] + f".emb{tag}.onnx"
 
 
@@ -193,11 +236,20 @@ def embedding_model_path(name: str, precision: str, cache_dir: str | None = None
     src = backbone_file() or ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
     if set(outputs.values()) <= set(ALL_LAYER_OUTPUTS.values()):
         outputs = dict(ALL_LAYER_OUTPUTS)
+    override = backbone_file() is not None
     dest = _variant_path(src, outputs)
+    if override:
+        dest = dest[:-5] + f"-metadata-{precision}.onnx"
     if not os.path.exists(dest) or os.path.getmtime(dest) < os.path.getmtime(src):
         part = f"{dest}.{os.getpid()}.part"
         try:
-            write_with_graph_outputs(src, part, list(outputs.values()))
+            if override:
+                write_with_graph_outputs(src, part, list(outputs.values()), use_metadata=True,
+                                         element_type=10 if precision == "fp16" else 1)
+            elif precision == "fp16":
+                write_with_graph_outputs(src, part, list(outputs.values()), element_type=10)  # ONNX FLOAT16
+            else:
+                write_with_graph_outputs(src, part, list(outputs.values()))
         except BaseException:
             if os.path.exists(part):
                 os.remove(part)
@@ -367,6 +419,13 @@ class AcousticModel:
 
         if precision not in PRECISION_FILES:
             raise ValueError(f"precision must be one of {sorted(PRECISION_FILES)}")
+        providers = providers or ["CPUExecutionProvider"]
+        use_cuda = providers[0] == "CUDAExecutionProvider"
+        if use_cuda:
+            if "CUDAExecutionProvider" not in ort.get_available_providers():
+                raise ValueError("CUDA requires the onnxruntime-gpu package")
+            if hasattr(ort, "preload_dlls"):
+                ort.preload_dlls()
         self.name, self.precision = name, precision
         model_path = backbone_file() or ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
         self.embeddings = False
@@ -374,7 +433,6 @@ class AcousticModel:
         tok_path = ensure_model_file(name, "tokens.txt", cache_dir)
 
         ort.set_default_logger_severity(3)
-        providers = providers or ["CPUExecutionProvider"]
 
         def options():
             so = ort.SessionOptions()
@@ -408,6 +466,10 @@ class AcousticModel:
                 except (OSError, ValueError):
                     pass        # fall back to the plain model: no embeddings, same log-probs
             self.session = ort.InferenceSession(model_path, options(), providers=providers)
+        if use_cuda:
+            if "CUDAExecutionProvider" not in self.session.get_providers():
+                raise ValueError("ONNX Runtime could not initialize CUDA. Check the CUDA and cuDNN libraries.")
+            self.session.disable_fallback()
 
         self.tokens = load_tokens()
         with open(tok_path, encoding="utf-8") as f:

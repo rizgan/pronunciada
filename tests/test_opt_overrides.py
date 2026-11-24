@@ -52,13 +52,13 @@ def test_backbone_override_reaches_the_model_paths(monkeypatch, tmp_path):
     monkeypatch.setenv("PRONUNCIADA_BACKBONE", str(f))
     seen = {}
 
-    def fake_write(src, dest, names):
+    def fake_write(src, dest, names, **kwargs):
         seen["src"] = src
         Path(dest).write_bytes(b"y")
 
     monkeypatch.setattr(A, "write_with_graph_outputs", fake_write)
     dest = A.embedding_model_path("zipa-small-crctc-500k", "int8", cache_dir=str(tmp_path / "nocache"))
-    assert seen["src"] == str(f) and dest == str(tmp_path / "cand.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.onnx")
+    assert seen["src"] == str(f) and dest == str(tmp_path / "cand.emb-enc0-enc1-enc2-enc3-enc4-enc5-final-metadata-int8.onnx")
 
 
 def test_adapter_dir_override(monkeypatch, tmp_path):
@@ -107,3 +107,17 @@ def test_spec_env_mapping(tmp_path):
         load_spec({"name": "bad name"})
     with pytest.raises(ValueError):
         load_spec({"name": "ok", "backbon": "typo"})
+
+
+def test_renamed_backbone_uses_declared_activation_types(tmp_path, monkeypatch):
+    from pronunciada import acoustic as A
+
+    # A minimal GraphProto with two intermediate tensors of different types.
+    values = [A._value_info("half", 10), A._value_info("single", 1)]
+    graph = b"".join(A._ld(13, value) for value in values)
+    src = tmp_path / "candidate.onnx"
+    src.write_bytes(A._ld(7, graph))
+    monkeypatch.setenv("PRONUNCIADA_BACKBONE", str(src))
+    variant = A.embedding_model_path("unused", "fp32", outputs={"a": "half", "b": "single"})
+    expected = graph + b"".join(A._ld(12, value) for value in values)
+    assert Path(variant).read_bytes() == A._ld(7, expected)

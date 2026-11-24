@@ -38,11 +38,16 @@ def table(res) -> str:
 
 def _common(s) -> None:
     s.add_argument("--strictness", type=float, default=0.5)
-    s.add_argument("--precision", default="fp32", choices=("fp32", "fp16", "int8"))
-    s.add_argument("--threads", type=int, default=None)
+    _execution_options(s)
     s.add_argument("--json", action="store_true", help="print the SentenceResult as JSON")
     s.add_argument("--max-tips", type=int, default=3)
     s.add_argument("--sensitivity", default="balanced", choices=("careful", "balanced", "eager"))
+
+
+def _execution_options(s) -> None:
+    s.add_argument("--precision", default="fp32", choices=("fp32", "fp16", "int8"))
+    s.add_argument("--threads", type=int, default=None, help="ONNX Runtime threads per model")
+    s.add_argument("--device", default="cpu", choices=("cpu", "cuda"), help="acoustic model device")
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -79,7 +84,7 @@ def _parser() -> argparse.ArgumentParser:
     sv.add_argument("--azure-compat", action="store_true",
                     help="also answer the Azure short-audio REST path with Azure-shaped JSON")
     sv.add_argument("--max-mb", type=float, default=20.0, help="request body limit in MB (default 20)")
-    sv.add_argument("--threads", type=int, default=None, help="ONNX Runtime threads per model")
+    _execution_options(sv)
 
     sub.add_parser("mcp", help="Model Context Protocol server on stdio (needs the `mcp` package)")
     return ap
@@ -89,7 +94,7 @@ def _score(a):
     from .scorer import Scorer
     from .text import normalize_lang
 
-    sc = Scorer(normalize_lang(a.lang), precision=a.precision, threads=a.threads)
+    sc = Scorer(normalize_lang(a.lang), precision=a.precision, threads=a.threads, device=a.device)
     return sc.score(a.audio, a.text, strictness=a.strictness)
 
 
@@ -173,7 +178,12 @@ def cmd_langs(a) -> int:
 def cmd_serve(a) -> int:
     from .server import serve
 
-    return serve(a.host, a.port, azure_compat=a.azure_compat, max_bytes=int(a.max_mb * 1e6), threads=a.threads)
+    try:
+        return serve(a.host, a.port, azure_compat=a.azure_compat, max_bytes=int(a.max_mb * 1e6),
+                     threads=a.threads, precision=a.precision, device=a.device)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
 
 def cmd_mcp(a) -> int:

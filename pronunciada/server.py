@@ -71,10 +71,12 @@ class App:
     """The request logic, independent of the HTTP plumbing (and testable on its own)."""
 
     def __init__(self, azure_compat: bool = False, max_bytes: int = DEFAULT_MAX_BYTES, threads: int | None = None,
-                 scorer_factory=None):
+                 scorer_factory=None, *, precision: str = "fp32", device: str = "cpu"):
         self.azure_compat = azure_compat
         self.max_bytes = int(max_bytes)
         self.threads = threads
+        self.precision = precision
+        self.device = device
         self._lock = threading.Lock()         # one scoring at a time: bounded memory / CPU
         self._scorers: dict = {}
         self._factory = scorer_factory
@@ -86,7 +88,7 @@ class App:
             else:
                 from .scorer import Scorer
 
-                self._scorers[lang] = Scorer(lang, threads=self.threads)
+                self._scorers[lang] = Scorer(lang, threads=self.threads, precision=self.precision, device=self.device)
         return self._scorers[lang]
 
     def score(self, audio: bytes, text: str, lang: str, strictness: float):
@@ -287,7 +289,10 @@ def make_handler(app: App):
 
 
 def make_server(host: str = "127.0.0.1", port: int = 8765, **app_kw) -> ThreadingHTTPServer:
-    httpd = ThreadingHTTPServer((host, port), make_handler(App(**app_kw)))
+    app = App(**app_kw)
+    if app.device == "cuda":
+        app.scorer("en")  # Initialize the requested provider before opening the port.
+    httpd = ThreadingHTTPServer((host, port), make_handler(app))
     httpd.daemon_threads = True
     return httpd
 
