@@ -257,8 +257,20 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     baseline_parser = commands.add_parser("baseline")
     baseline_parser.add_argument("--split", choices=["train"], required=True)
+    for name in ("prepare-table", "prepare-prototypes", "detail-oof", "fit", "verify-examples"):
+        command = commands.add_parser(name)
+        command.add_argument("--split", choices=["train"], required=True)
     args = parser.parse_args()
-    baseline(args.split)
+    if args.command == "baseline":
+        baseline(args.split)
+    elif args.command in ("fit", "verify-examples"):
+        from bench.coach import en_precision_fit
+
+        getattr(en_precision_fit, args.command.replace("-", "_"))()
+    else:
+        from bench.coach import en_precision_oof
+
+        getattr(en_precision_oof, args.command.replace("-", "_"))()
 
 
 if __name__ == "__main__":

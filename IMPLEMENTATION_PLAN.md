@@ -89,16 +89,30 @@ foreach ($example in @($baseline.examples.FP, $baseline.examples.TP)) {
 5. Проверь применение замороженного правила через bench-обвязку на train-записи из эпохи 1 или другом идентифицированном примере: старая версия отмечала верный звук, кандидат снимает эту отметку; приведи контрольный TP, который остаётся отмеченным. Реальный CLI пока показывает исходный результат. Убери временные варианты подбора, проверь git diff --name-only -- pronunciada. Вывод для собственных правок должен быть пустым.
 
 ~~~powershell
+$env:OMP_NUM_THREADS = '4'
+$env:OPENBLAS_NUM_THREADS = '2'
+$env:MKL_NUM_THREADS = '2'
+& $py -m bench.coach.en_precision prepare-table --split train
+& $py -m bench.coach.en_precision prepare-prototypes --split train
+& $py -m bench.calib.sound_emb so762 --workers 1
 & $py -m bench.coach.dump --sets so762-train --workers 1
-# При отсутствии OOF подготовь входы по bench/calib/train_sound_emb.py, затем:
-& $py -m bench.calib.train_sound_emb cv
+& $py -m bench.coach.en_precision detail-oof --split train
 & $py -m bench.coach.en_precision fit --split train
-& $py -m pytest -q tests/test_en_precision.py tests/test_coach.py
+& $py -m bench.coach.en_precision verify-examples --split train
+& $py -m pytest -q -rs tests/test_en_precision.py tests/test_coach.py
 ~~~
 
 **Приёмка:** воспроизводятся сохранённое решение и численные результаты. Тесты проверяют отсутствие пересечения дикторов при подборе и оценке, равенство решений в logit-шкале и после экспорта порогов, случай равных оценок, fallback и отрицательный результат. Запиши команды подготовки кеша, путь к контрольным записям и точную команду воспроизведения примеров в статус.
 
-**Статус:** ожидает эпоху 1.
+**Статус:** принята 2026-11-24 на ветке `codex/en-balanced-precision`. Зафиксирован кандидат для `en/balanced`; эксперимент завершён на official train. Исходная сборка воспроизведена с патчем и хешами эпохи 1. Ревизия ветки перед началом `f568cf848ea93801c29ed51bc587e9d31e491f7b` совпала с удалённой.
+
+- Подготовлены `features/speechocean762.parquet` (feature_version 3), `calib/sound2/protos_en.npz`, `calib/sound2/so762_train_vectors.pkl`, `bench/coach/dump-so762-train.pkl`, `calib/sound_oof.parquet` и его метаданные `calib/sound_oof.json` относительно `PRONUNCIADA_CACHE`. Все команды выше завершились с кодом 0. Для таблицы используются одинаково округлённые кешированные постериоры при холодном и повторном запуске. Для detail OOF использованы существующие признаки sound_E и настройка модели из `results/tables/calib_sound.json`. Историческая команда `train_sound_emb cv` требует уже готовый OOF-файл и обновляет архивный отчёт; для этого эксперимента логиты строит `detail-oof`.
+- Подтверждено полное совпадение ключей `(utt, phone_index)` с дампом и замером эпохи 1. 2 500 записей, 125 дикторов, 47 745 референсных звуков, 46 727 с экспертной меткой, включая 796 звуков в пропущенных словах. Хеш экспертных ключей `0069d55d03d1913be0db5a49098c69a700218e453b4fd2cb8d6e46010f0cb709`. SHA-256 OOF parquet `a610c62c56d957f7e22714fc1ae1ce4f7b64041257c8606ac97c5e7fd2fb89cb`.
+- Внешняя оценка использует пять складок по дикторам, подбор внутри каждой — четыре оставшиеся складки. Складки разведены и для логистической головы, и для refit проекции, деревьев и калибровочных карт sound_E, от которых зависят её признаки. Вложенные карты обучены на одной дополнительной складке для каждого набора исключений. Повторно использованы энкодер ZIPA, адаптер и прототипы из FLEURS train и gate пропусков слов из FLEURS validation с искусственными пропусками. Словарь, гиперпараметры, семейства карт sound_E и базовый balanced-порог исторически выбраны на speechocean762 train. Это внутренняя оценка гипотезы на этом корпусе.
+- На объединённых внешних прогнозах исходная переобученная OOF-голова дала TP/FP/FN/TN **3034/1332/6188/36173**, precision 69,492%, recall 32,900%. Кандидат дал **3035/1242/6187/36263**, precision 70,961%, recall 32,910%. FP −90, TP +1, прирост precision +1,469 п.п. (парный 95% ДИ +0,647…+2,385 п.п.), recall +0,011 п.п. (−0,575…+0,666 п.п.). Интервалы рассчитаны по дикторам, 1000 повторов, seed 0. Ориентир +3–5 п.п. на train не достигнут. Эти значения относятся к сравнению двух OOF-решений.
+- Пороги повторно подобраны на всех train OOF и зафиксированы в `results/tables/en_precision_candidate.json`. Fallback 0,4892702254678777, SHA-256 правила `9e7fdafff27e3f94c761b4901fa166e62229f8965b8ed4a00039a6999de19e21`. Два запуска `fit --split train` дали побайтно одинаковый отчёт в рабочей копии, SHA-256 `bdcbd64189cde43f94e774888c42acb7632f31d1111499ff2792fba18389c4e9`.
+- `& $py -m bench.coach.en_precision verify-examples --split train` на записи `data/speechocean762/audio/train/000050083.flac` снял ложную отметку у /t/ в позиции `(1, 2)`, оценка 2.0. На `data/speechocean762/audio/train/000010035.flac` сохранил TP у /ɪ/ в позиции `(0, 1)`, оценка 1.4. Штатный `pronunciada check` версии 1.0.2 с `--lang en --coach --sensitivity balanced --json` подтвердил обе исходные отметки. В продукте продолжает работать исходная конфигурация.
+- Тесты эпохи — 32 passed, 4 skipped (`pyopenjtalk`, `jieba` и два теста с macOS `say` и FFmpeg). Проверены границы складок, экспорт, равные оценки, fallback, пропуски слов и отказ от недопустимого порога. Официальный test и эпоха 3 не запускались.
 
 ## Эпоха 3 — проверить замороженное правило и принять решение о внедрении
 
