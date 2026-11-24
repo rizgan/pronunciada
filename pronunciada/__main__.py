@@ -116,7 +116,7 @@ def cmd_score(a) -> int:
             from .coach import SCHEMA_VERSION
 
             d["coaching"] = {"schema_version": SCHEMA_VERSION, "items": items, "tips": tp}
-        print(json.dumps(d, ensure_ascii=False, indent=1))
+        print(json.dumps(d, ensure_ascii=not sys.stdout.isatty(), indent=1))
     else:
         print(table(res))
         if res.audio is not None:
@@ -153,7 +153,7 @@ def cmd_check(a) -> int:
         return 2
     cb = report.coaching_block(res, a.sensitivity, a.max_tips)
     if a.json:
-        print(json.dumps(report.payload(res, coach=a.coach, coaching=cb), ensure_ascii=False, indent=1))
+        print(json.dumps(report.payload(res, coach=a.coach, coaching=cb), ensure_ascii=not sys.stdout.isatty(), indent=1))
         return 0
     color = report.want_color(sys.stdout, a.no_color)
     sys.stdout.write(report.render(res, cb, color=color, width=a.width, show_items=a.coach))
@@ -165,7 +165,7 @@ def cmd_langs(a) -> int:
 
     L = languages()
     if a.json:
-        print(json.dumps(L, ensure_ascii=False, indent=1))
+        print(json.dumps(L, ensure_ascii=not sys.stdout.isatty(), indent=1))
         return 0
     print(f"{'code':<5} {'language':<17} {'needs':<22} status")
     for x in L:
