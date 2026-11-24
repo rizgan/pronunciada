@@ -180,9 +180,8 @@ def test_coaching_on_scorer_result(tts):
     json.dumps(items)
     omitted = {wi for wi, w in enumerate(res.words) if w.present_prob is not None and w.present_prob < 0.5}
     X = coach.sound_inputs(res)
-    ep = coach.error_prob(X)
-    thr = coach.sound_threshold(coach.model(), "en", "balanced", False)
-    flagged = {(int(X["word"][i]), int(X["k"][i])) for i in range(len(ep)) if ep[i] >= thr and X["word"][i] not in omitted}
+    flagged = {(int(X["word"][i]), int(X["k"][i]))
+               for i in coach.flagged_indices(X, "en") if X["word"][i] not in omitted}
     assert {(it["word_index"], it["phone_index"]) for it in items if it["kind"] in ("substitution", "missing")} == flagged
     for it in items:
         assert it["schema_version"] == coach.SCHEMA_VERSION and it["kind"] in coach.KINDS
@@ -395,3 +394,53 @@ def test_tips_gate_follows_strictness(tts):
     lenient = tips.tips(sc.rescore(res, 0.0).coaching(), 50, sc.rescore(res, 0.0))
     pk = lambda T: sum(t["item"]["kind"] in tips.PRONUNCIATION_KINDS for t in T)  # noqa: E731
     assert pk(strict) >= pk(lenient)
+
+
+@pytest.mark.parametrize("lang,sensitivity,override", [
+    (lang, sensitivity, override)
+    for lang in ("en", "zh", "ja", "de", "es", "fr", "it", "ko", "pt", "ru")
+    for sensitivity in coach.SENSITIVITIES for override in (None, 0.5)
+    if (lang, sensitivity, override) != ("en", "balanced", None)
+])
+def test_sound_mask_preserves_legacy_thresholds(lang, sensitivity, override):
+    model = coach.model()
+    rules = model["by_lang"].get(lang, {})
+    X = {"expected": ["t"] * 6, "initial": np.array([True, False] * 3)}
+    if override is not None:
+        cuts = np.full(6, override)
+    elif "initial" in rules and "final" in rules:
+        cuts = np.array([rules["initial" if i else "final"][sensitivity] for i in X["initial"]])
+    else:
+        cuts = np.full(6, rules.get("sound", model["thresholds"])[sensitivity])
+    scores = cuts + np.repeat([-0.001, 0, 0.001], 2)
+    assert coach.sound_mask(X, scores, model, lang, sensitivity, override).tolist() == [
+        False, False, True, True, True, True]
+
+
+@pytest.mark.model
+def test_english_balanced_sound_mask_and_heard(monkeypatch):
+    from pronunciada import Scorer
+    from pronunciada.report import coaching_block
+
+    sc = Scorer("en", threads=2)
+    res = sc.score("site/samples/en-learner-1.mp3", "It was a beautiful day for a float")
+    original = res.to_dict()
+    selected = []
+    add_heard = coach._add_heard
+
+    def capture(inputs, result, indices):
+        selected.extend((int(inputs["word"][i]), int(inputs["k"][i])) for i in indices)
+        add_heard(inputs, result, indices)
+
+    monkeypatch.setattr(coach, "_add_heard", capture)
+    items = coaching_block(res)["items"]
+    assert set(selected) == {(i["word_index"], i["phone_index"]) for i in items
+                             if i["kind"] in {"missing", "substitution"}}
+    assert res.to_dict() == original
+
+    model = coach.model()
+    rule = model["by_lang"]["en"]["sound"]["balanced"]
+    X = {"expected": ["t", "t", "x"], "initial": np.array([True, False, False])}
+    cut = rule["thresholds"]["stop"]
+    assert coach.sound_mask(X, np.array([cut, cut - 1e-5, rule["fallback"]]),
+                            model, "en", "balanced").tolist() == [True, False, True]

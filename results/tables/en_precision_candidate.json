@@ -1,0 +1,381 @@
+{
+  "base": {
+    "coach_model_sha256": "d40f9f4874600a16b9da6d28967e72b6d1caa183b6a55d813beca5f716df2820",
+    "git_sha": "fce791863ed5be34243fd968e2fd97847d0dc451",
+    "inference_patch_sha256": "10eb025d65460a78d90d379748f7aca1a291d7f8bea73d59ccc07c74d68c8ec2"
+  },
+  "baseline": {
+    "fn": 6188,
+    "fp": 1332,
+    "precision": 0.6949152542372882,
+    "recall": 0.32899587941878117,
+    "tn": 36173,
+    "tp": 3034
+  },
+  "baseline_threshold": 0.48919697137923074,
+  "bootstrap": {
+    "paired_resamples": 1000,
+    "seed": 0,
+    "unit": "speaker"
+  },
+  "candidate": {
+    "fn": 6187,
+    "fp": 1242,
+    "precision": 0.7096095393967734,
+    "recall": 0.329104315766645,
+    "tn": 36263,
+    "tp": 3035
+  },
+  "candidate_sha256": "9e7fdafff27e3f94c761b4901fa166e62229f8965b8ed4a00039a6999de19e21",
+  "command": "python -m bench.coach.en_precision fit --split train",
+  "decision": "frozen",
+  "delta": {
+    "precision": 0.014694285159485232,
+    "recall": 0.00010843634786383838
+  },
+  "detail_oof": {
+    "calibration": {
+      "len": "platt",
+      "str": "isotonic"
+    },
+    "coach_dump_sha256": "c8122250059d02e09282d73591aec3464ec75974ca09be8a9d6c25b28b625abe",
+    "detail_model": "sound_E",
+    "feature_config": {
+      "adapter": "ade4d6f84f",
+      "feature_version": 3,
+      "g2p": "592cb972480b",
+      "native": "be3e71b1",
+      "variants": false
+    },
+    "inputs": {
+      "protos_en.npz": "4dc74f96d5f9f54684e4eff8d762e9b28273643edd13b8af1f4cba2c6c193566",
+      "so762_train_vectors.pkl": "bc4cd2b63312b221f18508344cce2a5a08e279d7ff0a83a4d880f5d2c958e852",
+      "speechocean762.parquet": "470246616cbf49099365b4ac08c6aa746e82a679d5af9b59a96756e5f70a67d0"
+    },
+    "labelled_rows": 46727,
+    "rows": 47745,
+    "schema": 3,
+    "sha256": "a610c62c56d957f7e22714fc1ae1ce4f7b64041257c8606ac97c5e7fd2fb89cb",
+    "shipped": {
+      "pronunciada/data/calib/sound_E.npz": "3673ea818d8788137456be0753808746eb4a275d0e9fa3992b34c729f98bda3c",
+      "pronunciada/data/calib/sound_E_emb.npz": "1c76c9c610c3851c4e92ddeeab114b757375dc9f2de240fb3880ba1912e35744",
+      "results/tables/calib_sound.json": "b6721a346a9d70729725e23b7251d684dd12849a80404189bb5e0e6e5e09054d"
+    },
+    "speakers": 125,
+    "versions": {
+      "numpy": "2.5.5",
+      "pandas": "3.1.1",
+      "pyarrow": "26.0.1",
+      "scikit-learn": "1.9.1",
+      "scipy": "1.18.1"
+    }
+  },
+  "examples": {
+    "FP": {
+      "audio": "data/speechocean762/audio/train/000050083.flac",
+      "candidate_marked": false,
+      "expected": "t",
+      "id": "so762-000050083",
+      "position": [
+        1,
+        2
+      ],
+      "score": 2.0,
+      "text": "KATE'S GOT SOME GREY"
+    },
+    "TP": {
+      "audio": "data/speechocean762/audio/train/000010035.flac",
+      "candidate_marked": true,
+      "expected": "ɪ",
+      "id": "so762-000010035",
+      "position": [
+        0,
+        1
+      ],
+      "score": 1.4,
+      "text": "ZERO THREE FIVE ONE"
+    }
+  },
+  "folds": [
+    {
+      "baseline": {
+        "fn": 1208,
+        "fp": 229,
+        "precision": 0.7349537037037037,
+        "recall": 0.3445469343461747,
+        "tn": 7301,
+        "tp": 635
+      },
+      "candidate": {
+        "fn": 1210,
+        "fp": 220,
+        "precision": 0.7420867526377491,
+        "recall": 0.3434617471513836,
+        "tn": 7310,
+        "tp": 633
+      },
+      "fold": 0,
+      "has_rule": true,
+      "held_speakers": [
+        "0006",
+        "0048",
+        "0070",
+        "0135",
+        "1197",
+        "1203",
+        "1260",
+        "1336",
+        "1362",
+        "2034",
+        "2059",
+        "2168",
+        "2282",
+        "2427",
+        "2621",
+        "3083",
+        "3837",
+        "6504",
+        "6912",
+        "7551",
+        "8057",
+        "9611",
+        "9615",
+        "9619",
+        "9643"
+      ]
+    },
+    {
+      "baseline": {
+        "fn": 1116,
+        "fp": 269,
+        "precision": 0.6633291614518148,
+        "recall": 0.3219927095990279,
+        "tn": 7429,
+        "tp": 530
+      },
+      "candidate": {
+        "fn": 1110,
+        "fp": 238,
+        "precision": 0.6925064599483204,
+        "recall": 0.32563791008505466,
+        "tn": 7460,
+        "tp": 536
+      },
+      "fold": 1,
+      "has_rule": true,
+      "held_speakers": [
+        "0054",
+        "0131",
+        "1033",
+        "1042",
+        "1064",
+        "2036",
+        "2170",
+        "2242",
+        "2380",
+        "2430",
+        "2981",
+        "3020",
+        "3088",
+        "3208",
+        "3423",
+        "5408",
+        "5424",
+        "6010",
+        "9034",
+        "9556",
+        "9616",
+        "9628",
+        "9630",
+        "9639",
+        "9649"
+      ]
+    },
+    {
+      "baseline": {
+        "fn": 1184,
+        "fp": 308,
+        "precision": 0.6539325842696629,
+        "recall": 0.32955832389580975,
+        "tn": 7246,
+        "tp": 582
+      },
+      "candidate": {
+        "fn": 1177,
+        "fp": 296,
+        "precision": 0.6655367231638418,
+        "recall": 0.33352208380520953,
+        "tn": 7258,
+        "tp": 589
+      },
+      "fold": 2,
+      "has_rule": true,
+      "held_speakers": [
+        "0005",
+        "0026",
+        "0145",
+        "0482",
+        "0739",
+        "0813",
+        "1027",
+        "1407",
+        "1419",
+        "1439",
+        "1447",
+        "2022",
+        "2179",
+        "2208",
+        "2251",
+        "3046",
+        "3049",
+        "4005",
+        "5218",
+        "6121",
+        "6401",
+        "8002",
+        "9600",
+        "9607",
+        "9646"
+      ]
+    },
+    {
+      "baseline": {
+        "fn": 1589,
+        "fp": 240,
+        "precision": 0.7742238946378175,
+        "recall": 0.3412106135986733,
+        "tn": 6696,
+        "tp": 823
+      },
+      "candidate": {
+        "fn": 1622,
+        "fp": 220,
+        "precision": 0.7821782178217822,
+        "recall": 0.3275290215588723,
+        "tn": 6716,
+        "tp": 790
+      },
+      "fold": 3,
+      "has_rule": true,
+      "held_speakers": [
+        "0001",
+        "0056",
+        "0104",
+        "0575",
+        "0594",
+        "0960",
+        "1012",
+        "1309",
+        "1418",
+        "1435",
+        "2236",
+        "2799",
+        "3068",
+        "3636",
+        "5195",
+        "5414",
+        "5551",
+        "6048",
+        "7001",
+        "9604",
+        "9606",
+        "9609",
+        "9613",
+        "9624",
+        "9634"
+      ]
+    },
+    {
+      "baseline": {
+        "fn": 1091,
+        "fp": 286,
+        "precision": 0.6186666666666667,
+        "recall": 0.29839228295819936,
+        "tn": 7501,
+        "tp": 464
+      },
+      "candidate": {
+        "fn": 1068,
+        "fp": 268,
+        "precision": 0.6450331125827815,
+        "recall": 0.3131832797427653,
+        "tn": 7519,
+        "tp": 487
+      },
+      "fold": 4,
+      "has_rule": true,
+      "held_speakers": [
+        "0036",
+        "0053",
+        "0075",
+        "0103",
+        "0560",
+        "1029",
+        "1044",
+        "1092",
+        "1372",
+        "2061",
+        "2089",
+        "2129",
+        "2244",
+        "2402",
+        "2450",
+        "3002",
+        "3021",
+        "3023",
+        "5401",
+        "5418",
+        "8585",
+        "9070",
+        "9614",
+        "9625",
+        "9645"
+      ]
+    }
+  ],
+  "input_sha256": "26e0dc26c555b81799b4b03c9718b8d36a09006b5590095b7d9d7f8e3df9ae9b",
+  "key_sha256": "0069d55d03d1913be0db5a49098c69a700218e453b4fd2cb8d6e46010f0cb709",
+  "labelled_phones": 46727,
+  "omitted_labelled_phones": 796,
+  "outer_gate_passed": true,
+  "paired_95_ci": {
+    "precision": [
+      0.006474642811444636,
+      0.02384598831299105
+    ],
+    "recall": [
+      -0.005751458222193165,
+      0.00665514435001813
+    ]
+  },
+  "previously_fitted": [
+    "The ZIPA backbone and FLEURS-train English adapter were reused from the phase 1 scorer.",
+    "The omission gate was fitted on FLEURS validation with synthetic omissions.",
+    "Packaged FLEURS-en train prototypes were reused. The embedding projection and trees were refitted.",
+    "Sound_E hyperparameters, feature vocabulary, calibration families and the balanced cut are historical selections on speechocean762 train."
+  ],
+  "reason": "frozen",
+  "records": 2500,
+  "rule": {
+    "fallback": 0.4892702254678777,
+    "logit_threshold": -0.04292568820623088,
+    "offsets": {
+      "affricate": -0.25214472616855227,
+      "approximant": -0.48223867595458203,
+      "fricative": 0.34924678556386546,
+      "nasal": -0.18562934537113945,
+      "stop": -0.303998007293933,
+      "vowel": -0.062315155144405755
+    },
+    "thresholds": {
+      "affricate": 0.5521147979898405,
+      "approximant": 0.6080953173095843,
+      "fricative": 0.4031944314457477,
+      "nasal": 0.5356154943106671,
+      "stop": 0.5648998732921381,
+      "vowel": 0.5048472148757156
+    }
+  },
+  "speakers": 125,
+  "split": "train"
+}

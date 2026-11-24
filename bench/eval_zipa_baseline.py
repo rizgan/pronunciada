@@ -668,8 +668,8 @@ def eval_coaching(B: dict) -> tuple[list[dict], dict]:
     fg, fm = -np.asarray(g), 1 - np.asarray(m)          # flag scores: higher = flag
     spk = np.asarray(R["spk"])[keep]
     sens = ("careful", "balanced", "eager")
-    thr = {s: Co.sound_threshold(mdl, "en", s, False) for s in sens}
-    recalls = {s: float(y[ours >= thr[s]].sum() / y.sum()) for s in sens}
+    masks = {s: Co.sound_mask(R, ep, mdl, "en", s)[keep] for s in sens}
+    recalls = {s: float(y[masks[s]].sum() / y.sum()) for s in sens}
     rng = np.random.default_rng(0)
     us = np.unique(spk)
     idx = {u: np.flatnonzero(spk == u) for u in us}
@@ -679,7 +679,7 @@ def eval_coaching(B: dict) -> tuple[list[dict], dict]:
         row = {"ap_ours": average_precision_score(y[b], ours[b]), "ap_gop": average_precision_score(y[b], fg[b]),
                "ap_match": average_precision_score(y[b], fm[b])}
         for s in sens:
-            f = ours[b] >= thr[s]
+            f = masks[s][b]
             r = float(y[b][f].sum() / y[b].sum())
             row[f"p_ours_{s}"] = float(y[b][f].mean())
             row[f"p_gop_{s}"] = prec_at_recall(fg[b], y[b], r)[0]
@@ -692,7 +692,7 @@ def eval_coaching(B: dict) -> tuple[list[dict], dict]:
     Y = _tables("coaching_azure_yardstick.json") or {}
     rows = []
     for s in sens:
-        po = float(y[ours >= thr[s]].mean())
+        po = float(y[masks[s]].mean())
         pg, rg = prec_at_recall(fg, y, recalls[s])
         pm, rm = prec_at_recall(fm, y, recalls[s])
         d = col(f"p_ours_{s}") - col(f"p_gop_{s}")

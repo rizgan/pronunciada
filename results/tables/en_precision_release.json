@@ -1,0 +1,699 @@
+{
+  "base": {
+    "coach_model_sha256": "d40f9f4874600a16b9da6d28967e72b6d1caa183b6a55d813beca5f716df2820",
+    "git_sha": "fce791863ed5be34243fd968e2fd97847d0dc451",
+    "inference_patch_sha256": "10eb025d65460a78d90d379748f7aca1a291d7f8bea73d59ccc07c74d68c8ec2"
+  },
+  "baseline": {
+    "coverage": {
+      "expert_unmatched": 328,
+      "items_without_expert_label": 174,
+      "matched": 47041,
+      "matched_in_omitted_words": 755,
+      "raw_flags_without_expert_label": 213,
+      "reference_phones": 48082,
+      "reference_unmatched": 1041
+    },
+    "examples": {
+      "FP": {
+        "audio": "data/speechocean762/audio/test/000030051.flac",
+        "error_prob": 0.7195907951788174,
+        "expected": "ə",
+        "expert_position": [
+          0,
+          1
+        ],
+        "id": "so762-000030051",
+        "incorrect": false,
+        "marked": true,
+        "omitted_word": false,
+        "position": [
+          0,
+          1
+        ],
+        "raw_flag": true,
+        "score": 2.0,
+        "sound_class": "vowel",
+        "speaker": "0003",
+        "text": "ONE ZERO ONE ZERO",
+        "unmatched_reason": null
+      },
+      "TP": {
+        "audio": "data/speechocean762/audio/test/000030024.flac",
+        "error_prob": 0.5357890523137323,
+        "expected": "z",
+        "expert_position": [
+          1,
+          3
+        ],
+        "id": "so762-000030024",
+        "incorrect": true,
+        "marked": true,
+        "omitted_word": false,
+        "position": [
+          1,
+          3
+        ],
+        "raw_flag": true,
+        "score": 1.4,
+        "sound_class": "fricative",
+        "speaker": "0003",
+        "text": "KATE LOVES CHINA",
+        "unmatched_reason": null
+      }
+    },
+    "expert_loss_reasons": {
+      "alignment_gap": 328
+    },
+    "full_records": "bench/en_precision/release/baseline-test.jsonl",
+    "full_records_sha256": "7040222a8e7b40afeeb551c44fd3cb4a5058fe2bd1734e013988fdc8cbb6d406",
+    "key_sha256": "839f7a8b011c81c9a638f22d8a770d55e14d3a50b77de441e540e03bb7bbecbb",
+    "metrics": {
+      "items": {
+        "FN": 6078,
+        "FP": 1542,
+        "TN": 36754,
+        "TP": 2667,
+        "precision": 0.6336421952957947,
+        "precision_denominator": 4209,
+        "recall": 0.30497427101200686,
+        "recall_denominator": 8745
+      },
+      "raw": {
+        "FN": 5578,
+        "FP": 1640,
+        "TN": 36656,
+        "TP": 3167,
+        "precision": 0.6588308716455169,
+        "precision_denominator": 4807,
+        "recall": 0.36214979988564894,
+        "recall_denominator": 8745
+      }
+    },
+    "records": 2500,
+    "reference_loss_reasons": {
+      "alignment_gap": 1041
+    },
+    "sound_classes": {
+      "affricate": {
+        "FN": 38,
+        "FP": 12,
+        "TN": 292,
+        "TP": 18,
+        "phones": 360
+      },
+      "approximant": {
+        "FN": 451,
+        "FP": 166,
+        "TN": 4304,
+        "TP": 236,
+        "phones": 5157
+      },
+      "fricative": {
+        "FN": 1414,
+        "FP": 251,
+        "TN": 6048,
+        "TP": 691,
+        "phones": 8404
+      },
+      "nasal": {
+        "FN": 437,
+        "FP": 96,
+        "TN": 4284,
+        "TP": 218,
+        "phones": 5035
+      },
+      "stop": {
+        "FN": 835,
+        "FP": 164,
+        "TN": 8078,
+        "TP": 254,
+        "phones": 9331
+      },
+      "vowel": {
+        "FN": 2903,
+        "FP": 853,
+        "TN": 13748,
+        "TP": 1250,
+        "phones": 18754
+      }
+    },
+    "speakers": 125,
+    "tips": {
+      "clean_utterance_rate": {
+        "denominator": 203,
+        "numerator": 14,
+        "value": 0.06896551724137931
+      },
+      "error_utterance_coverage": {
+        "denominator": 2297,
+        "numerator": 771,
+        "value": 0.33565520243796254
+      },
+      "precision": {
+        "denominator": 1233,
+        "numerator": 852,
+        "value": 0.6909975669099757
+      }
+    }
+  },
+  "bootstrap": {
+    "paired_resamples": 1000,
+    "seed": 0,
+    "unit": "speaker"
+  },
+  "candidate": {
+    "coverage": {
+      "expert_unmatched": 328,
+      "items_without_expert_label": 137,
+      "matched": 47041,
+      "matched_in_omitted_words": 755,
+      "raw_flags_without_expert_label": 174,
+      "reference_phones": 48082,
+      "reference_unmatched": 1041
+    },
+    "examples": {
+      "FP": {
+        "audio": "data/speechocean762/audio/test/000030051.flac",
+        "error_prob": 0.7195907951788174,
+        "expected": "ə",
+        "expert_position": [
+          0,
+          1
+        ],
+        "id": "so762-000030051",
+        "incorrect": false,
+        "marked": true,
+        "omitted_word": false,
+        "position": [
+          0,
+          1
+        ],
+        "raw_flag": true,
+        "score": 2.0,
+        "sound_class": "vowel",
+        "speaker": "0003",
+        "text": "ONE ZERO ONE ZERO",
+        "unmatched_reason": null
+      },
+      "TP": {
+        "audio": "data/speechocean762/audio/test/000030024.flac",
+        "error_prob": 0.5357890523137323,
+        "expected": "z",
+        "expert_position": [
+          1,
+          3
+        ],
+        "id": "so762-000030024",
+        "incorrect": true,
+        "marked": true,
+        "omitted_word": false,
+        "position": [
+          1,
+          3
+        ],
+        "raw_flag": true,
+        "score": 1.4,
+        "sound_class": "fricative",
+        "speaker": "0003",
+        "text": "KATE LOVES CHINA",
+        "unmatched_reason": null
+      }
+    },
+    "expert_loss_reasons": {
+      "alignment_gap": 328
+    },
+    "full_records": "bench/en_precision/release/candidate-test.jsonl",
+    "full_records_sha256": "4d3dcca58ba7255048a11c95b0fd0e27e1a1822208102335a396a1e5ed86869b",
+    "key_sha256": "839f7a8b011c81c9a638f22d8a770d55e14d3a50b77de441e540e03bb7bbecbb",
+    "metrics": {
+      "items": {
+        "FN": 6023,
+        "FP": 1468,
+        "TN": 36828,
+        "TP": 2722,
+        "precision": 0.6496420047732697,
+        "precision_denominator": 4190,
+        "recall": 0.3112635791881075,
+        "recall_denominator": 8745
+      },
+      "raw": {
+        "FN": 5530,
+        "FP": 1561,
+        "TN": 36735,
+        "TP": 3215,
+        "precision": 0.6731574539363484,
+        "precision_denominator": 4776,
+        "recall": 0.3676386506575186,
+        "recall_denominator": 8745
+      }
+    },
+    "records": 2500,
+    "reference_loss_reasons": {
+      "alignment_gap": 1041
+    },
+    "sound_classes": {
+      "affricate": {
+        "FN": 40,
+        "FP": 10,
+        "TN": 294,
+        "TP": 16,
+        "phones": 360
+      },
+      "approximant": {
+        "FN": 520,
+        "FP": 81,
+        "TN": 4389,
+        "TP": 167,
+        "phones": 5157
+      },
+      "fricative": {
+        "FN": 1174,
+        "FP": 432,
+        "TN": 5867,
+        "TP": 931,
+        "phones": 8404
+      },
+      "nasal": {
+        "FN": 459,
+        "FP": 69,
+        "TN": 4311,
+        "TP": 196,
+        "phones": 5035
+      },
+      "stop": {
+        "FN": 882,
+        "FP": 96,
+        "TN": 8146,
+        "TP": 207,
+        "phones": 9331
+      },
+      "vowel": {
+        "FN": 2948,
+        "FP": 780,
+        "TN": 13821,
+        "TP": 1205,
+        "phones": 18754
+      }
+    },
+    "speakers": 125,
+    "tips": {
+      "clean_utterance_rate": {
+        "denominator": 203,
+        "numerator": 13,
+        "value": 0.06403940886699508
+      },
+      "error_utterance_coverage": {
+        "denominator": 2297,
+        "numerator": 765,
+        "value": 0.3330430996952547
+      },
+      "precision": {
+        "denominator": 1225,
+        "numerator": 847,
+        "value": 0.6914285714285714
+      }
+    }
+  },
+  "candidate_sha256": "9e7fdafff27e3f94c761b4901fa166e62229f8965b8ed4a00039a6999de19e21",
+  "class_deltas": {
+    "affricate": {
+      "FN": 2,
+      "FP": -2,
+      "TN": 2,
+      "TP": -2,
+      "phones": 0
+    },
+    "approximant": {
+      "FN": 69,
+      "FP": -85,
+      "TN": 85,
+      "TP": -69,
+      "phones": 0
+    },
+    "fricative": {
+      "FN": -240,
+      "FP": 181,
+      "TN": -181,
+      "TP": 240,
+      "phones": 0
+    },
+    "nasal": {
+      "FN": 22,
+      "FP": -27,
+      "TN": 27,
+      "TP": -22,
+      "phones": 0
+    },
+    "stop": {
+      "FN": 47,
+      "FP": -68,
+      "TN": 68,
+      "TP": -47,
+      "phones": 0
+    },
+    "vowel": {
+      "FN": 45,
+      "FP": -73,
+      "TN": 73,
+      "TP": -45,
+      "phones": 0
+    }
+  },
+  "command": "python -m bench.coach.en_precision release --split test",
+  "criteria": {
+    "fp_decreases": true,
+    "identical_keys": true,
+    "precision_ci_lower_above_zero": true,
+    "recall_delta_nonnegative": true,
+    "tp_preserved": true
+  },
+  "dataset": "speechocean762",
+  "decision": "accepted",
+  "delta_pp": {
+    "precision": 1.5999809477475035,
+    "recall": 0.6289308176100628
+  },
+  "input_manifest": "bench/en_precision/release/inputs-test.jsonl",
+  "input_sha256": "e13c26807d968a2aa70929d00730f645d529a9ca519cd8a4cf3bccbb60314646",
+  "integration_patch": "bench/en_precision/release/candidate-2b83fb98b3c61470b6daf4fdf61da7a99e65749b0133fd92db93a5db4ab9a38c.patch",
+  "integration_patch_sha256": "2b83fb98b3c61470b6daf4fdf61da7a99e65749b0133fd92db93a5db4ab9a38c",
+  "paired_95_ci_pp": {
+    "precision": [
+      0.8451869469138942,
+      2.4520712302854686
+    ],
+    "recall": [
+      0.0,
+      1.3177212676571388
+    ]
+  },
+  "precision_target_at_least_3pp": false,
+  "processing_errors": 0,
+  "release_measurer_sha256": "8a2178409bed81d980616f1b9f68a3ca36e49305c20f2442d2f8d14f36d9e5d1",
+  "source": {
+    "coach_model_sha256": "d04a130adfb066023369e92cfe989427ea577c8aaf7204b5d6a146412e0b856b",
+    "external_files": {
+      "backbone": {
+        "name": "model.onnx",
+        "sha256": "ec62e6f583cc3658c6a28a8841c65a6343e8c4b8b350ce1fd5bd8c717c280d96"
+      },
+      "session_model": {
+        "name": "model.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.ort1.32.0-AMD64-72635ff3.onnx",
+        "sha256": "5c296e6bbe642ae21ec24dc5805e93d275c78f99706e7d454c402945f7659309"
+      },
+      "tokens": {
+        "name": "tokens.txt",
+        "sha256": "f8e042a0c9130532b22d03ec7cae2f75a23fbec70c450c31a8efb51787b2b8fe"
+      }
+    },
+    "files": {
+      "bench/coach/en_precision.py": "bae3528cc4d490ad9ace05a61253d181281b4375c86eba4972e2464a62f9553e",
+      "bench/data/__init__.py": "460e03bf92a4933ff6608551dadbf8ec9020f64a0eca891a4506f4a4de4e36f3",
+      "bench/data/aishell3.py": "02220513f1c09d2270799f4b1ac902a36d597846bee5b7676f5b7758a5fba020",
+      "bench/data/common.py": "91fdd1d9c78d87dab7035ef2bebdfd24428d22779659a1f1db7c9cddb9fc3f53",
+      "bench/data/cv_real/build.json": "be06e97aa6a205f00a993ec3596fca4e1218fdffcc866f05557e08d8ba84949f",
+      "bench/data/cv_real/de.jsonl": "1b1f5ee57c8308f44191a920aea4d0631d32635ff544796269da2a510c8e6a8f",
+      "bench/data/cv_real/en.jsonl": "75ee63b8400d3dd6db5ed41ad8333028ebe253790094e4b686f11c1f48f20649",
+      "bench/data/cv_real/es.jsonl": "9b931f2e99a6b19818386eb9e536ab370f2a492b7f86032c0e6c0277bc1e0c18",
+      "bench/data/cv_real/fr.jsonl": "8f3edd47035d458cfcae9c8f2c01de869ae0a6f49b9f1101e8b6fa4a23405585",
+      "bench/data/cv_real/it.jsonl": "366715affee7449e6819fce04f4263dca5eba0227c91f16124f0930a6315a1bb",
+      "bench/data/cv_real/ja.jsonl": "6feca123d299c1cf8fcb8a180ec728261b4660628634be26c89e364b9abd23e4",
+      "bench/data/cv_real/ko.jsonl": "c47df201ece6f2018aebaa190555a1c6f08c4a2c02dbc108b00606a475ce9973",
+      "bench/data/cv_real/pt.jsonl": "850f219ef4583bb84862b44891e3b16eb3972cd2b7bb60e8fb73815e22f8c5b1",
+      "bench/data/cv_real/ru.jsonl": "50373414142bbbb8a8fe23fb7fdceba4a710fb50584e1e67c27330f72cee6cd3",
+      "bench/data/cv_real/zh-CN.jsonl": "b0b262d755a5e9da8b9ef310d5823b03dad8aa8bc34af682e1ddc80ab197aa2e",
+      "bench/data/cv_real/zh-TW.jsonl": "01ba677d1a8174f5463af2bb5c08d26c65f15b9c9c2719a28ef724156e35a8be",
+      "bench/data/epadb.py": "03579b6f905ed6f20d11dc0e58eac56e5bcd91a7b60f84cf2642d56a5ebed765",
+      "bench/data/fleurs.py": "102522b43db29e401301a3daad248f2c258b754306f73f4834813482340b9bd4",
+      "bench/data/fleurs_swap.py": "c997db67c535d8090c177fc851b98e4f4403ddfe0e896cf27a2c92a4ba211ed8",
+      "bench/data/l2arctic.py": "5d5dea38ffb5cd096aead71c4aa41d9b1a88b3685bb717b16bb2c655c28fad44",
+      "bench/data/speechocean762.py": "ffe80522f2179111895b96d6ba9a9c73d0429f147f2fbe0f816e3934f33a7fb6",
+      "bench/data/zhtw.py": "5f5bd9e538c5131375ea03750ad25758d0c3ae05b755f0aecc34e8f710115e7a",
+      "bench/pipeline/labels.py": "54089bbdd900756625ce284c26ca9c5e703acd22cdca99ba09bdcde14941dc03",
+      "pronunciada/__init__.py": "79a12361c38aad71e275e6fb1612e64513a702f1c5b20b1918d2a2e57cda9767",
+      "pronunciada/__main__.py": "ba9ed5e08e95f476ca44ffd1aa068dc90966c3ab3764c5c812a6bd998f2bbafa",
+      "pronunciada/_overrides.py": "22eb6df01a29498a101476549b477a5f734264881eaeea488a38ee630f00cf4d",
+      "pronunciada/_resample.py": "214585b91db20a72d9d6141119e0be0803f166069a8e031a8a5fc34ba904ef9e",
+      "pronunciada/acoustic.py": "3c6e2c05aec601723d1f75b52ed8d037dacafb02dfff1baa5d8c0aa806d353f3",
+      "pronunciada/adapter.py": "5001e45ee63b729542e69a70dc85868aadb1486ef426f76c71a16223e57caaff",
+      "pronunciada/align.py": "1e3c37c6e1ad6466b3a40370e6221a9134887afc7eb66906715fe7383a28eb7b",
+      "pronunciada/articulatory.py": "0a080c5c7b618c4fa3ff009b94f7503a9b5163246a583c970b54906097462596",
+      "pronunciada/attr_heads.py": "8867903d7cde46c5aaf44bbed7ab4b38d79910b99a967d59dd0de8cf41a0490e",
+      "pronunciada/audio.py": "51c64a568baabb3b4171390f5502f517dad17d9f6ebcaa56b620432297cac8cf",
+      "pronunciada/calibrate.py": "33c9ebbc966c7c6d2fa236758fb3d4d0771e133bbb4bb61275ceb1917f17a651",
+      "pronunciada/coach.py": "dcf268781aa2e6d517956a7e7b28cfad2065aeb9c89680314767b48acb9a801f",
+      "pronunciada/coach_attr.py": "471b84b42c304f0ba5756afa4643dbfbb6e1c44ba5e0d75616f1c2b259ce76ed",
+      "pronunciada/coach_zh.py": "447756b6b1b74eb34ac317b506a32d67612061741e553f667f68b156fd668f07",
+      "pronunciada/compat/__init__.py": "0ec532290d2bf35bb9dc00e9f837d8e9c27277d907db58c467b43c9bb1fd4625",
+      "pronunciada/compat/azure.py": "76bf27c1e509cb04e5823ab2206040910e7f287f734c414c5a6adf500f9971c8",
+      "pronunciada/contrast_heads.py": "91e54bec96f06fcf9f7909d54e750c6ed0495bc9d5575b15d53d0b169b335363",
+      "pronunciada/contrast_word.py": "b487cae949891205245e89dc23de79f09e24c9e3da6c2aae1f10ee8a73592074",
+      "pronunciada/core.py": "4ca43da1c2a5b8781c8cd1ec6208654805a4813577bce9fe9867313c519ee388",
+      "pronunciada/data/LICENSES_SHIPPED.json": "dfedfbdc135252e6d577a0790507cd69905405347da2634c9ac51a3171c80223",
+      "pronunciada/data/adapters/de.npz": "05096274d41ef73c89331d4410062f613b82aeb4464a489d20c9f3a5a0006591",
+      "pronunciada/data/adapters/en.npz": "e4d6f84fee528ee89cb2aa491eb43ddb890114c83e7c606a39214fd53a37b4e6",
+      "pronunciada/data/adapters/es.npz": "8a97538382d4adc3f56ad080daf35713a78368db36293f445c2f90fde8d071be",
+      "pronunciada/data/adapters/fr.npz": "5682625dc68055cea7c5c8c557ca85af81082fcddcad4deedbe52af2e15dde35",
+      "pronunciada/data/adapters/it.npz": "3b65a7e17bf753e08bb94833d16e63093ed0139ce79e1b66a54ffa38380797bf",
+      "pronunciada/data/adapters/ja.npz": "e34819d324ee297bc0e82ef28926514e621de451dacf949cdd287553d67dff94",
+      "pronunciada/data/adapters/ko.npz": "3294c7c0d7c5695c95f48e7e80c25560cd84f3a5b1565847adf1bb48779a464d",
+      "pronunciada/data/adapters/pt.npz": "4cf09006a831d2c6c61a6833fb4ce6a1915318198c8ec658fc4bf19ccc0f1fbe",
+      "pronunciada/data/adapters/ru.npz": "eb3ea5162ece6b789fd5be2db32e5e240f134846e6a33c590eb87878e85b905f",
+      "pronunciada/data/adapters/zh.npz": "579ad58d47316bfb707c5af04214c967a9013a3589fbda661c284e154107a782",
+      "pronunciada/data/calib/config.json": "ad80608f4e53f2dd6cf40a4ee9ed2d9974745f86af074ff01b763460c2e1d26b",
+      "pronunciada/data/calib/contrast_caps.json": "5e731b14247f12124d5f2b8bf1bf4b03d841c554db4c41d78ec7684cba36da6a",
+      "pronunciada/data/calib/contrast_word/ja.json": "cde10e55c0dfb76fd601bcbfdebcd78a15a5351f427fbffdfccc1673e8da5140",
+      "pronunciada/data/calib/contrast_word/zh.json": "ae796b64d107ec7d27abe5da05eacfb76faf009aa3f769e5079a72c21951f7dd",
+      "pronunciada/data/calib/de_identity_word.json": "14c7695457821ba0761aabae85215a48be009b821e77f6c1bfe31ce01caa078c",
+      "pronunciada/data/calib/identity/es.json": "dc676db7922879e88ed7725f5a6f191d7e87fabe850a422715b5e49d97ed52cb",
+      "pronunciada/data/calib/identity/pt.json": "0357c8f9729f775422433dbd1f9a6e12a748bea51ae6337ec9fec5c8f0c0737c",
+      "pronunciada/data/calib/identity/ru.json": "40aae962d69cbca5f1bac3b81f1c0c43ca7aaa81256742c92badad765fcb7467",
+      "pronunciada/data/calib/identity/zh.json": "0fbf8445208c263d2919a03118812aa3f1bcffee9d621f90fa333d6097087074",
+      "pronunciada/data/calib/ko_identity_word.json": "0819c2e4a1211780cf66a7de2e168daff67738d4012c0fd00b6c552aaa2cdca0",
+      "pronunciada/data/calib/omission.json": "88c50f6a04b479941a59b418ae47254d27645408b63cfbc77ea3bb67926144e5",
+      "pronunciada/data/calib/phone_dist.npz": "a4f1e4b10ffdfd96049a170350e818b328fe48590df5c097d0df1bc2b380987e",
+      "pronunciada/data/calib/prosody/de.json": "c85281ee540a6408656e27032b87314c7e6fa39bc8b0a81a565779f827ea1323",
+      "pronunciada/data/calib/prosody/de.stress.json": "7ca4762a7c630f47d0aa02f6490023c4ca346957776e12312c2e486cc7c7ade2",
+      "pronunciada/data/calib/prosody/en.json": "eba3ce59a4026f20dd3e2db0bd9e87976fcd3894e21accb23529952c0b8a3ac0",
+      "pronunciada/data/calib/prosody/en.stress.json": "5323b7201e7104a47f870f97cfa0985ab16539f7a39c21c717d8fa3ee47ccd65",
+      "pronunciada/data/calib/prosody/es.json": "525c391b8efd05d3016b53fbc178181f832125ab0c3792c4953a62348c854f8d",
+      "pronunciada/data/calib/prosody/es.stress.json": "1f0a4599299bcb3e56d6da3b74bf92da8c4719dd11d2f852d956d33120a1d87c",
+      "pronunciada/data/calib/prosody/it.json": "d2fb71a4f19e10b6def351f25866bee1b20ee3162acb74cfdd387eacc7b32d7f",
+      "pronunciada/data/calib/prosody/it.stress.json": "40b4460a9138560df749fefe6ebfd370c60a5309bd977efdf66b91cea3160d67",
+      "pronunciada/data/calib/prosody/pt.json": "ae9ee3cd70aebdb12a07cdad2df2a2c410cce4faaae37b525ddbcabddda81d82",
+      "pronunciada/data/calib/prosody/pt.stress.json": "bb31d8b3da6a1fdf4bcce6e997053cc71e3fd3a7514efd0ed0348eda038fd539",
+      "pronunciada/data/calib/prosody/ru.json": "d92a7054bf19b2e08d9a700afbe3026fd6903353fb7d6cd0a7fc6652321b0013",
+      "pronunciada/data/calib/prosody/ru.stress.json": "357c7fe57b45d3c7babceaaecbc3ce4442bae495f88a5f85c01fde2322a829e9",
+      "pronunciada/data/calib/prosody/zh.json": "04eaaf33ea55eb9a5f860b26f43a480c375156bdf1a8bc2e8a742ee89f5541b9",
+      "pronunciada/data/calib/prosody/zh.tone_zh_v2.json": "82aedaa04037a5e9a7a20b1c9922e8c88fb53879941363a9cbc9fcd7132f9aad",
+      "pronunciada/data/calib/prosody/zh.tone_zh_v3.json": "e044d9e91fb832afc6116b4db0f7f8f8bee1009959898ba1339c37c4effd1f91",
+      "pronunciada/data/calib/sentence.npz": "daa53ec4b7a91354468c191414a72b3637c57959e2fd798e2b4b291550682ab4",
+      "pronunciada/data/calib/sentence_r19.npz": "f9d60525e14b2930c16d8e42fa5dfa5bdef54af5178bee405e98d38d8320c817",
+      "pronunciada/data/calib/sentence_r4.npz": "227977216c98ed470d63e14a2f5cabe47ce1be57704b1ea96d4b4cc874f4381f",
+      "pronunciada/data/calib/sentence_zh_recal.json": "dc31265ba6d0e4656e1ad1e33d3be52249ec9e0d28f3f598836c09dc131d923e",
+      "pronunciada/data/calib/seqhead_en.npz": "a0853d3c3274d158eb47c2412067a94f6a85a9b70efdeeb78eb5d9c71d39db07",
+      "pronunciada/data/calib/seqhead_en.onnx": "1f657828c95a8dcbf88bd7f0d59d38bce6cb35f317af2f2501bf5b359a5626e8",
+      "pronunciada/data/calib/sound_B.npz": "4331fd3400fa7bb96c4f3d781e17fae90be076d8f721ee0f99fbf66f730e99c2",
+      "pronunciada/data/calib/sound_E.npz": "3673ea818d8788137456be0753808746eb4a275d0e9fa3992b34c729f98bda3c",
+      "pronunciada/data/calib/sound_E_emb.npz": "1c76c9c610c3851c4e92ddeeab114b757375dc9f2de240fb3880ba1912e35744",
+      "pronunciada/data/calib/sound_U.npz": "a33b101bbf08522c0001cd902dca9bc087c9878e594643f3d4dc97b13a1418a7",
+      "pronunciada/data/calib/stress_rel/de.json": "453e5f34883f07c521756e4e729f14b2a1bce6caa62aa2a94e412a8dc1f737e5",
+      "pronunciada/data/calib/word.npz": "b16205808546befe211b5ef6a0926a1d98276d4eb3b5ebe9a95fd33de56d73b4",
+      "pronunciada/data/calib/word_lang/de.json": "95178135a600cfd4019766109a9705d970e39efaf87c3746f4f6a1cdf5a742be",
+      "pronunciada/data/calib/word_reg.npz": "26f7adec684ee75f81f734de16aa92b9d542611e0d490122c9824f5671c527bb",
+      "pronunciada/data/calib/word_reg_r6.npz": "191bb4e3916f8b7acebe59f876285ccbd942e4e7e67a2a1edff20aad43bb16ab",
+      "pronunciada/data/calib/word_step/ja.json": "0903be25a35b24c4e84fc1117f833f8997df12866acaa4909e4972500564c4c1",
+      "pronunciada/data/cjk/zh_neutral.txt": "5b4801fedb8cf87f920048698abba8d65a7f5cb96db6cf2872b37b4dae82f9d2",
+      "pronunciada/data/cjk/zh_tw_tones.txt": "b0c6b5b7f40c665c3088333eac0e1bfed9e2df540277cb1a819f27d9ea15ecdc",
+      "pronunciada/data/coach/attr_heads.npz": "6feb9580df9bc4379a3f7ffa25dae41a241f63bed5d64c1a7878e3fb4ab68b0a",
+      "pronunciada/data/coach/contrast_heads.json": "5715665fcc763e9f367b22e441a916dc6c947d0c7238c2e52da31fc402d73662",
+      "pronunciada/data/coach/de_identity.npz": "56f6f63b392cb5a3ada09e900d2a177ffd139631cbecbd986d7cc88b120b067d",
+      "pronunciada/data/coach/gate.json": "efa2e698a15eebd1d70392477f5cb87743bc71fc61f147fcf062d1e3dfac3090",
+      "pronunciada/data/coach/identity/es.npz": "3b355e2dcd09b6d15686fc6d0bb71c30a3c58fd9b581e7cb2782d9a6b710e49d",
+      "pronunciada/data/coach/identity/pt.npz": "3cb275ca9bfaf89dd589a80b10c7adf830b5a511497ae5310edfb23dbc4ae40c",
+      "pronunciada/data/coach/identity/ru.npz": "902a9006b776863cd1ee27ed9ada791658a13d7afcfdd35bc38ca26799a91df3",
+      "pronunciada/data/coach/identity/zh.npz": "66733cbd1c4af1f187f00930e1f6872598df12a3c686d31d4a7ee479400ea4d2",
+      "pronunciada/data/coach/inventory.json": "478e5a6f495a11f563a2493d8039dbc1d86dc349aae57af72b057944cae5a80f",
+      "pronunciada/data/coach/ja_identity.npz": "e0abf14de58635ea5278a0c7545930e2d5ad0fafd901cc0d797b12656a96e979",
+      "pronunciada/data/coach/ko_identity.npz": "ebb80e73c23cd6f44239bd430921a7a595fbae473763d3f93145b9c4103f214a",
+      "pronunciada/data/coach/ko_tense.npz": "58d0c77c73e34c04591cd17113eceb4e040c4d5691d4c72fcffe5103e768ad1e",
+      "pronunciada/data/coach/model.json": "d04a130adfb066023369e92cfe989427ea577c8aaf7204b5d6a146412e0b856b",
+      "pronunciada/data/coach/zh_sound.npz": "dbfbac91f25af2e677d7a632beadabf7bfb2979d4ad669a95e7d04e8a90e4dd7",
+      "pronunciada/data/length/ja.json": "b3669f49a9c2636e8724612d6945fa82f34175bff60ad3d3bee1867c2561416a",
+      "pronunciada/data/length/ja_r19.json": "ad7f353abe27d2b01828148514dc1f682e489b7d409efd1306b01aa3f80848b6",
+      "pronunciada/data/lex/LICENSE.txt": "a315a78f452da049d3accb8c9ce0f971fca8a9c92b53c594fffbb8a636566395",
+      "pronunciada/data/lex/SOURCES-eu.txt": "69b8d41df0a67dd7b61361b207eda38b6b6b9ff9635445672e28c6c335d00191",
+      "pronunciada/data/lex/de.tsv.gz": "85db7c2e05acb6a80906f39d457e7c8be8f6fa73771a720f2a4db84f4c180558",
+      "pronunciada/data/lex/de_lts.tsv.gz": "1b8510aad602bdc7bc89778c51c8ba46b8d29eeec4f22397c67f0215147734ab",
+      "pronunciada/data/lex/en.tsv.gz": "21ebd189bcf236e9b2820040d1ff018955de8ab77e74a2308b4d9939975e3be0",
+      "pronunciada/data/lex/en_lts.tsv.gz": "a45806e22f85617cfc6813a10bb8c360a6dd053d9fe1dd2660f8062650171cec",
+      "pronunciada/data/lex/es_words.txt.gz": "482acaf51b7cbe0b96d555ceea87afc044e0bd7f49db451f03e5ac4b7f0cf768",
+      "pronunciada/data/lex/fr.tsv.gz": "09159824847cf31beefdd92a0abb94bd9fbe29c330e4e26744ee078b8a97cd80",
+      "pronunciada/data/lex/fr_lts.tsv.gz": "29a1cde2f94d917d887e9d973259d962215c83becb0ff07e0856d6be63f61c66",
+      "pronunciada/data/lex/it.tsv.gz": "d5e72918723e2448ab0e86fa573c598ad5d41d0f4e6073738462d32c91f472a2",
+      "pronunciada/data/lex/it_lts.tsv.gz": "473be4d27a9c4c309e044e8fd12cb4e7c5d0bf06255e92e4283db5b6dca88f3a",
+      "pronunciada/data/lex/pt.tsv.gz": "987a5ae30522bfb14bf2f8da4ae755567e2f7818e89c290d5890d363811b0684",
+      "pronunciada/data/lex/ru.tsv.gz": "a2d9997066ee8ac939c7d00d3d63fac6789910270697f890aeb607e6de2d7ac4",
+      "pronunciada/data/lex/ru_stress.tsv.gz": "c9963bf79226c230975a3f19451c7bd48a20ca127e6455b11ed950267d431382",
+      "pronunciada/data/lex/ru_stress_extra.tsv.gz": "92b1ae0d8326555e9f19871ab97819ec0c8d017791509c04f47a14605812b2ad",
+      "pronunciada/data/lex/ru_vowels.json": "932f6171f27ff4b441db194f40dfa8f91dd8cc0449cdac78719dae35bcc4eb75",
+      "pronunciada/data/native/de.json": "89f188b440eaa90bcccb7959a37a5e80e81033bc21cefb498225082b270af3d1",
+      "pronunciada/data/native/en.json": "be3e71b1ae7d7a06292582b60983fe1c19b086d767120cd2e94285bb4e12afe7",
+      "pronunciada/data/native/es.json": "88fc7bdbf4486074c7d3de4149e89d0081e7041a3aa2e9b74dc4a35a2ca4a1a9",
+      "pronunciada/data/native/fr.json": "5201b90d58dae92edad7a57e18c063b1de7a5a2e7bb1e536276533bf19ec4237",
+      "pronunciada/data/native/it.json": "8dea2e947e80996768cf9db91920aa2930c582c55d7bfd3d752f11a2dcf2f90c",
+      "pronunciada/data/native/ja.json": "10d50f65388d6289e89f693020cbe1ce52b669fea1d1b252f31b8c949555fd55",
+      "pronunciada/data/native/ko.json": "ab73dca7ab78b6c26e5aa006370cb99bd85ab1e7406b77af1cf8c6236b453f60",
+      "pronunciada/data/native/pt.json": "f0333732e3954cd4df682d93f3bb86687c9cea2057df2900c20aef3d38c05d7f",
+      "pronunciada/data/native/ru.json": "ce70321707c2ff126a5d872c2a62583830106101f2941648da9a80885018b960",
+      "pronunciada/data/native/zh.json": "28f18f6d20486ff94fda4517499c6076966c44defbc2b9e86e94ca3f37735d10",
+      "pronunciada/data/prosody/stress.json": "d7a736ee8a9e28f403684419b03ce940d0d8e2e0da4917f8248e99bc9fd7da2f",
+      "pronunciada/data/prosody/stress.onnx": "a7ed773ec4e0b385e55f481d06b42ea908ca3262008f3eac92a8096f5d02512e",
+      "pronunciada/data/prosody/stress_v3.json": "a68abacf277d3535b7ca3ee985892961f35988a125d3e01079aaa4e263d4ac71",
+      "pronunciada/data/prosody/stress_v3.onnx": "7a93506dbbde0167cbe3599eafb3b4fac1465f5fa0f0702df5ef29e4cdd06ccd",
+      "pronunciada/data/prosody/stress_v3.zemb.npz": "75435e56de70e13079b156aa457226ee904177f96337af17530784fd12611a5d",
+      "pronunciada/data/prosody/tone_zh_v2.json": "20f09d0e40e360704ae577afa233b1c25c979fd694b67f674b299ed7e965398b",
+      "pronunciada/data/prosody/tone_zh_v2.onnx": "47849e1029a78ca1d89dc6b241a782eb58724738e2ee06759148bab3c4298aa4",
+      "pronunciada/data/prosody/tone_zh_v3z.json": "90130735206e1ce7061af4a7d239b3af8b74f89bc952dda723caf4032ef6fc89",
+      "pronunciada/data/prosody/tone_zh_v3z.onnx": "ffd41da84a8f017b836690159245026e8ed0a0a59debd4e4cc3e227d61aa7e27",
+      "pronunciada/data/prosody/tone_zh_v3z.zemb.npz": "71829f4651c8aaab7e8d6a03c50b1c754ad09c9eb4b3e6aad00943973e3542d0",
+      "pronunciada/data/zipa_tokens.txt": "ff3e41986f3f073b357b2cdf700893e9a584e8a28b6a2a82c6274d9caa39ca87",
+      "pronunciada/de_identity.py": "59a16b2eb0ab7c858ea3298c497ebd48ded4cb44bb4d7173d8ff580595389a32",
+      "pronunciada/delivery.py": "4f0d0ab9fbd047227e256af2458876e35848d616676e48c40856b06cee46c01e",
+      "pronunciada/delivery_coach.py": "3f53f28dc739afafbad3261bff7689ae1e9f77379d8c3cb80e143d6e7c7a98d3",
+      "pronunciada/features.py": "788b269395ec7e7cb5f88ebfa292af60b631711999ad16125f77cb7ed7eefe33",
+      "pronunciada/hangul.py": "21e3649f500d6ecf98d195e0a9632f342916835ec99862eb1da4a34a5ab6a365",
+      "pronunciada/identity.py": "45a7998f4b47d2de6be54d0b81c325b163d3dd722a724a3f96546ebec0c9f6c5",
+      "pronunciada/ja_identity.py": "605fc5fc26fc3c795d338015e79043188111e7a4abfe3cce00779ac8ecb70b35",
+      "pronunciada/ja_round19.py": "499db86db515668a4ca3428fa66e5fd2ff1b48e17bf7430a4f5313bf865acf0f",
+      "pronunciada/ko_identity.py": "9c1d263aaa547b5791cf07d757159070fde3a0140677ffe473ebd4e4244b7598",
+      "pronunciada/languages.py": "3847a25001cbf37697c25224c3324bc549767e6f84bb996438bc44d08d19c4f3",
+      "pronunciada/lattice.py": "080aa571d17dca26abb7ad6ae068da48f986535cf1d98f959d291762e78f6b5f",
+      "pronunciada/length.py": "c3b7dfac899dadae130f655770eaad6b4bda75af2d3c3ac2f04596f055dda433",
+      "pronunciada/length_r19.py": "b2f1237348f080d56a5eca74d8bbf929cfac5d1be23384c1406b005155b6fc5d",
+      "pronunciada/mcp_server.py": "68f64187261b3d3294f55bf0a5b44471a7ccf5a5adff992ae869e9da16b09f5e",
+      "pronunciada/prosody/__init__.py": "72244cfb89cfa16e4ad851e10a5b7b4b78fd7922059ad7ce762b4aa17e822f1c",
+      "pronunciada/prosody/f0.py": "e70c1d2389bd36bba0dcbbd5d2602df8562c3e7cc39b8e3934f91b027fc58f30",
+      "pronunciada/prosody/features.py": "b5779fbb5d71a3ef5e1969a5ccd5e966acce3e8057391dfc51378b00018dd0d7",
+      "pronunciada/prosody/tone_leniency.py": "eb0b2e648ecac04ee671dd581aa85704ac176bfbbc4a7bf9a9f5867afcf548b3",
+      "pronunciada/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "pronunciada/quality.py": "219ab58d9da88de32a613948fdce666e365e8b815990351e4f9e3e54a630bce7",
+      "pronunciada/r20.py": "0cf5f87168288fcc1e8cde729b375aee85b4777d4d790c4bee579ca7db81dd73",
+      "pronunciada/reference/__init__.py": "60f79461787fdda905ff9f3f54913dacc5a5f649d8798e24dd8a252f7ccd9b24",
+      "pronunciada/reference/align.py": "317a3d4ea2b86a2909526fe6375c669494ecfdfee8f76bedd9b0d1d62f215fbe",
+      "pronunciada/reference/calibrate.py": "6f1e27a10bbfc7e2d00a8ad5f7e6093a7a0fdfcaf827e87cb9744e84fe884737",
+      "pronunciada/reference/features.py": "43df7e8f200345f545e3aae12ec4763bfc1f2d1dbaea23baa2e026082891e0e5",
+      "pronunciada/reference/lattice.py": "665448d8ba3b7f6bffd826b1e3251a412c932108000137162fa221c4993824c1",
+      "pronunciada/reference/npz.py": "6c24a55b1bf504a7d69550f1fff11634066eca53e67e240b3e1d8ef1417c3347",
+      "pronunciada/reference/numeric.py": "932612f15a5e61f7b5187ae6fa258cff2218cd209a2fb17fcae987d6fa54d8d5",
+      "pronunciada/reference/pipeline.py": "be1ad01aee2d47d2b4ed2a7301ed31a06b645e99e7ec4cea47068a7e9ad28ace",
+      "pronunciada/reference/tokens.py": "bdd91c3ba02e11138579e829a496fa7ac26164c1d16149167ebfacf53e6fa472",
+      "pronunciada/report.py": "d79f25ddde845308f45931bfbb449a66e63a08acb0306ba9e210e71c8cf505d0",
+      "pronunciada/scorer.py": "2d57b2206783d2f7fa4a9365825901b4b7a667b6a3d50fb145cdabc3107c446d",
+      "pronunciada/sentence_head.py": "42fb545603d7c63647362a7f9640cb722ecd68ba0a4d2f781ac74038576130bc",
+      "pronunciada/server.py": "79dcf785be6ae3f016543f657eac1dc728ab82fe95d1baa78f4c3cb1c0bfffa4",
+      "pronunciada/sound_emb.py": "01bfc44bb5d5985c31701e3927048d6fbd20b287d74618f71ef1cc5ba1597a40",
+      "pronunciada/stress_rel.py": "93125da851a1ac13f747dbf61ebff6ebffc2bc15606be6759103e56325858286",
+      "pronunciada/text/__init__.py": "09b5dbc169b51e977de07e417d1125a21f752db975b8b15026062d8154812be8",
+      "pronunciada/text/_cjk_common.py": "7388111eca4e11711b70af088a9334d74453a2694ddb36f56b5fbe1553275139",
+      "pronunciada/text/_eu_base.py": "6e31d2c1103b04b52f30b70ec15c42d455d6b85818044e931146961a80b0e3b2",
+      "pronunciada/text/_eu_build.py": "e5356b9fac72da30e05ac2e4f0f929e1eee18b5c34ee3a940267b20bb06608f2",
+      "pronunciada/text/_eu_common.py": "517dad2594f17f11fc4213a1fed26a4d1eabdaa6f27c6c0f275e0a670aac47db",
+      "pronunciada/text/_eu_lts.py": "4ac2968e44f14af9ee79ad36ec0c99ba90275adcc6fffcf7235b8a63437a6017",
+      "pronunciada/text/base.py": "45624689a66e020031640685fbf52f90639cb810cda2447eebe6ca3b0785033c",
+      "pronunciada/text/de.py": "061fda6f58803559efed5f67c65476f80e0d90de8dcae00e08bc50c029563f17",
+      "pronunciada/text/en.py": "e847cc4c6c63aba5fc19e56aa5728ac44ed0f4b3c9013ce0f1215d893dcf9dc2",
+      "pronunciada/text/es.py": "33e400c1f7d95c7608a7701d5b8f863f174830cdeaf6d25d08867310ced95ce7",
+      "pronunciada/text/fr.py": "46b4e74b8640b5a55f2c112363f55cd25ae81192e965d00dc0a8465b1b9ff249",
+      "pronunciada/text/ipa.py": "6a15708e7a275edc2638d6e0bca7871241a3ad8b8a97ef481a75b2ae74c79dd6",
+      "pronunciada/text/it.py": "0334b308ae85762c666d9c6f179125a5b8d0c19111130d6d0b96c772a57ead46",
+      "pronunciada/text/ja.py": "db0068e1a840f18d55f8262b3dac45151ed3f2f876505b4dc3154fe4479adc49",
+      "pronunciada/text/ko.py": "f122bca2dc14cc0b5d9252b466f6f2e217c97f28e910352e359b7f752c8c5890",
+      "pronunciada/text/pt.py": "0b080e425408729d5e8cafcc635f8929df25401a8799df0df41d785ef3d7e9a4",
+      "pronunciada/text/ru.py": "55c1a2edb15f4c0f73bd7c0537041c43cf31471c43b0b24d12bf6f7b7e12f116",
+      "pronunciada/text/zh.py": "cb7688bba0419d34d49f0542e0d8da2864e0ea6c6ca557688ead0ea1c8adc1bf",
+      "pronunciada/tips.py": "8e6fdbdd75b83361097583b7d23b54e45c55e22037d1b49e3c5d411fa146b0d0",
+      "pronunciada/tools/__init__.py": "694ec9b68b4ae0d9bad06ce28ff63c518915ba2eaa1db2af48a00ba91ab85c60",
+      "pronunciada/tools/core_child.py": "f4b5315fa10f5569c0062cca4a6e17259da52b091065fbc5d16f2ec55e968068",
+      "pronunciada/types.py": "edd741ec40fed7557b3e70226edc029d6cc05ea514614a209a909cd4f0697a61",
+      "pronunciada/variants.py": "062f0ed4e6ec3a68956484fdc9da47281d0dbd7afcaf60c1bdb722e2555758d3",
+      "pronunciada/word_lang.py": "5db10ca56a8cd99bd965ea6bb1d5b9e2b93c8628f693ebec23091e1a6981784e",
+      "pronunciada/word_match.py": "5276d10f7d4c106edfb91fcc37db869bbf9c203a0298c002c372a647b056e2e6",
+      "pronunciada/word_step.py": "7d4487913f51ad18c6209783fc1a2702a7903943a257283b89fad9bc550726f9"
+    },
+    "git_sha": "767df61155a745284c38d099043b3562cdd8b39d",
+    "inference_patch": "bench/en_precision/release/inference-5d48a1c1479585e3049eb36913acdf66ad1ca03d7136dd806b9626300e9e865b.patch",
+    "inference_patch_sha256": "5d48a1c1479585e3049eb36913acdf66ad1ca03d7136dd806b9626300e9e865b",
+    "overrides": {},
+    "settings": {
+      "lang": "en",
+      "model": "zipa-small-crctc-500k",
+      "precision": "fp32",
+      "providers": [
+        "CPUExecutionProvider"
+      ],
+      "sensitivity": "balanced",
+      "strictness": 0.5
+    },
+    "versions": {
+      "PyYAML": "6.0.4",
+      "Pygments": "2.21.0",
+      "aiohappyeyeballs": "2.7.1",
+      "aiohttp": "3.14.5",
+      "aiosignal": "1.4.0",
+      "attrs": "26.1.0",
+      "certifi": "2026.11.20",
+      "cffi": "2.1.1",
+      "charset-normalizer": "3.5.3",
+      "cloudpickle": "3.1.3",
+      "colorama": "0.4.6",
+      "editdistance": "0.8.1",
+      "flatbuffers": "25.12.19",
+      "frozenlist": "1.8.0",
+      "fsspec": "2026.9.0",
+      "idna": "3.20",
+      "iniconfig": "2.3.1",
+      "joblib": "1.6.0",
+      "kaldi_native_fbank": "1.23.3",
+      "multidict": "7.2.1",
+      "munkres": "3.0.0",
+      "narwhals": "2.29.0",
+      "numpy": "2.5.5",
+      "nvidia-cublas": "13.10.0.20",
+      "nvidia-cuda-nvrtc": "13.5.37",
+      "nvidia-cuda-runtime": "13.5.37",
+      "nvidia-cudnn-cu13": "9.28.1.4",
+      "nvidia-cufft": "12.5.0.14",
+      "nvidia-curand": "10.4.5.25",
+      "nvidia-nvjitlink": "13.5.37",
+      "onnxruntime-gpu": "1.32.0",
+      "packaging": "26.3",
+      "pandas": "3.1.1",
+      "panphon": "0.22.2",
+      "pip": "23.2.1",
+      "pluggy": "1.7.0",
+      "pronunciada": "1.0.2",
+      "propcache": "0.5.4",
+      "protobuf": "7.36.2",
+      "pyarrow": "26.0.1",
+      "pycparser": "3.12",
+      "pytest": "9.2.0",
+      "python": "3.12.0",
+      "python-dateutil": "4.0.0",
+      "regex": "2026.11.23",
+      "requests": "2.34.2",
+      "scikit-learn": "1.9.1",
+      "scipy": "1.18.1",
+      "setuptools": "84.2.1",
+      "soundfile": "0.14.0",
+      "threadpoolctl": "3.8.0",
+      "typing_extensions": "4.16.0",
+      "tzdata": "2026.6",
+      "unicodecsv": "0.14.1",
+      "urllib3": "2.8.0",
+      "yarl": "1.25.1"
+    }
+  },
+  "split": "test"
+}
