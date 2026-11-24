@@ -124,8 +124,8 @@ def main():
     az = np.array([100.0 - (AZP[(R["utt"][i], R["tj"][i], R["tk"][i])][0] or 0.0) for i in keep])
     spk = np.asarray(R["spk"])[keep]
     recalls = {s: None for s in ("careful", "balanced", "eager")}
-    for s in recalls:
-        f = ours >= Co.sound_threshold(mdl, "en", s, False)
+    masks = {s: Co.sound_mask(R, ep, mdl, "en", s)[keep] for s in recalls}
+    for s, f in masks.items():
         recalls[s] = float(y[f].sum() / y.sum())
     rng = np.random.default_rng(0)
     us = np.unique(spk)
@@ -135,7 +135,7 @@ def main():
         b = np.concatenate([idx[u] for u in rng.choice(us, len(us))])
         row = {"ap_ours": average_precision_score(y[b], ours[b]), "ap_azure": average_precision_score(y[b], az[b])}
         for s, r in recalls.items():
-            f = ours[b] >= Co.sound_threshold(mdl, "en", s, False)
+            f = masks[s][b]
             row[f"p_ours_{s}"] = float(y[b][f].mean())
             row[f"p_azure_{s}"] = prec_at_recall(az[b], y[b], float(y[b][f].sum() / y[b].sum()))[0]
         boots.append(row)
@@ -150,7 +150,7 @@ def main():
            "diff_ap_ci": [float(np.quantile([b["ap_ours"] - b["ap_azure"] for b in boots], q)) for q in (0.025, 0.975)],
            "at_recall": {}}
     for s, r in recalls.items():
-        f = ours >= Co.sound_threshold(mdl, "en", s, False)
+        f = masks[s]
         pa, ra = prec_at_recall(az, y, r)
         rep["at_recall"][s] = {"recall": r, "precision_ours": float(y[f].mean()), "ours_ci": ci(f"p_ours_{s}"),
                                "precision_azure": pa, "azure_recall_reached": ra, "azure_ci": ci(f"p_azure_{s}"),

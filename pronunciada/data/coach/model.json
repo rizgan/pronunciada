@@ -126,7 +126,17 @@
    },
    "sound": {
     "careful": 0.6282238484107823,
-    "balanced": 0.48919697137923074,
+    "balanced": {
+     "fallback": 0.4892702254678777,
+     "thresholds": {
+      "affricate": 0.5521147979898405,
+      "approximant": 0.6080953173095843,
+      "fricative": 0.4031944314457477,
+      "nasal": 0.5356154943106671,
+      "stop": 0.5648998732921381,
+      "vowel": 0.5048472148757156
+     }
+    },
     "eager": 0.36330040624356486
    },
    "note": "round 12b: English coaching score refitted by bench/coach/fit_v2.py on sound_E out-of-fold inputs (speechocean762 train); other languages keep the global model"

@@ -422,10 +422,11 @@ def learner_table(R, M, heads):
         if not len(fl):
             continue
         P = heads.predict(R["V"], ix[fl], R["C"])
+        masks = {s: Co.sound_mask(Xu, d["error_prob"], M, "en", s) for s in SENS}
         for q, j in enumerate(fl):
             i = ix[j]
             ep = float(d["error_prob"][j])
-            fs = {s: ep >= Co.sound_threshold(M, "en", s, bool(Xu["initial"][j])) for s in SENS}
+            fs = {s: bool(mask[j]) for s, mask in masks.items()}
             cl = open_claims(P[q], R["expected"][i], R["alts"][i], d["heard"][j], R["cand"][i])
             sub = is_sub(R["pron"][i])
             for c in cl:
@@ -458,9 +459,10 @@ def native_table(M, heads):
         if len(fl):
             V = o["vec"].astype(np.float32)
             P = heads.predict(V, fl, AH.context_vectors(V))
+            masks = {s: Co.sound_mask(X, d["error_prob"], M, lang, s) for s in SENS}
             for q, i in enumerate(fl):
                 ep = float(d["error_prob"][i])
-                fs = {s: ep >= Co.sound_threshold(M, lang, s, bool(X["initial"][i])) for s in SENS}
+                fs = {s: bool(mask[i]) for s, mask in masks.items()}
                 clip.append((ep, fs, open_claims(P[q], X["expected"][i], X["alts"][i], d["heard"][i], X["cand"][i])))
         out[lang].append(clip)
     return out

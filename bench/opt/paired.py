@@ -140,6 +140,7 @@ def coaching(base: Path, cand: Path) -> dict:
     from pronunciada import coach as Co
 
     mdl = Co.model()
+    sens = ("careful", "balanced", "eager")
     S = {}
     for tag, run in (("b", base), ("c", cand)):
         with cache_of(run):
@@ -148,13 +149,13 @@ def coaching(base: Path, cand: Path) -> dict:
         ep = Co.error_prob(R, mdl, "en")
         keep = [i for i in range(len(ep)) if np.isfinite(R["acc"][i]) and (R["utt"][i], R["tj"][i], R["tk"][i]) in AZP]
         S[tag] = {"key": [(R["utt"][i], R["tj"][i], R["tk"][i]) for i in keep], "y": (R["acc"][keep] < 2).astype(float),
-                  "s": ep[keep], "spk": np.asarray(R["spk"])[keep]}
+                  "s": ep[keep], "spk": np.asarray(R["spk"])[keep],
+                  "masks": {s: Co.sound_mask(R, ep, mdl, "en", s)[keep] for s in sens}}
     if S["b"]["key"] != S["c"]["key"]:
         raise RuntimeError("coaching items differ between the runs")
     y, spk = S["b"]["y"], S["b"]["spk"]
     sb, sc = S["b"]["s"], S["c"]["s"]
-    sens = ("careful", "balanced", "eager")
-    thr = {s: Co.sound_threshold(mdl, "en", s, False) for s in sens}
+    mb, mc = S["b"]["masks"], S["c"]["masks"]
     rng = np.random.default_rng(0)
     us = np.unique(spk)
     idx = {u: np.flatnonzero(spk == u) for u in us}
@@ -163,10 +164,10 @@ def coaching(base: Path, cand: Path) -> dict:
         b = np.concatenate([idx[u] for u in rng.choice(us, len(us))])
         D["ap"].append(average_precision_score(y[b], sc[b]) - average_precision_score(y[b], sb[b]))
         for s in sens:
-            D[s].append(float(y[b][sc[b] >= thr[s]].mean()) - float(y[b][sb[b] >= thr[s]].mean()))
+            D[s].append(float(y[b][mc[s][b]].mean()) - float(y[b][mb[s][b]].mean()))
     out = {}
     for s in sens:
-        vb, vc = float(y[sb >= thr[s]].mean()), float(y[sc >= thr[s]].mean())
+        vb, vc = float(y[mb[s]].mean()), float(y[mc[s]].mean())
         out[f"coaching|en|precision at '{s}' recall"] = _res(vb, vc, vc - vb, _q(D[s]), _p2(D[s]), len(y),
                                                              "paired speaker bootstrap, precision at the sensitivity")
     vb, vc = float(average_precision_score(y, sb)), float(average_precision_score(y, sc))

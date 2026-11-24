@@ -250,8 +250,24 @@ def sound_threshold(mdl: dict, lang: str, sensitivity: str, initial: bool) -> fl
     if "initial" in bl and "final" in bl:
         return bl["initial" if initial else "final"][sensitivity]
     if "sound" in bl:
-        return bl["sound"][sensitivity]
+        value = bl["sound"][sensitivity]
+        return value["fallback"] if isinstance(value, dict) else value
     return mdl["thresholds"][sensitivity]
+
+
+def sound_mask(X: dict, ep: np.ndarray, mdl: dict, lang: str, sensitivity: str,
+               threshold: float | None = None) -> np.ndarray:
+    if threshold is not None:
+        return ep >= threshold
+    if lang == "en" and sensitivity == "balanced":
+        rule = mdl.get("by_lang", {}).get(lang, {}).get("sound", {}).get(sensitivity)
+        if isinstance(rule, dict):
+            cuts = [rule["thresholds"].get(sound_class(phone), rule["fallback"])
+                    for phone in X["expected"]]
+            return ep >= cuts
+    ti = sound_threshold(mdl, lang, sensitivity, True)
+    tf = sound_threshold(mdl, lang, sensitivity, False)
+    return np.where(X["initial"], ep >= ti, ep >= tf)
 
 
 def heard_ok(mdl: dict, lang: str, expected: str, cand, lh: float, le: float) -> bool:
@@ -273,9 +289,7 @@ def decide(X: dict, lang: str, sensitivity: str = "balanced", mdl: dict | None =
     heard candidate for the flagged sounds (sound_inputs(..., heard=...))."""
     mdl = mdl or model()
     ep = error_prob(X, mdl, lang)
-    ti = threshold if threshold is not None else sound_threshold(mdl, lang, sensitivity, True)
-    tf = threshold if threshold is not None else sound_threshold(mdl, lang, sensitivity, False)
-    flag = np.where(X["initial"], ep >= ti, ep >= tf)
+    flag = sound_mask(X, ep, mdl, lang, sensitivity, threshold)
     flag &= ~np.isin(X["word"], list(skip_words))
     mp = missing_prob(X, mdl)
     n = len(ep)
@@ -294,9 +308,7 @@ def flagged_indices(X: dict, lang: str, sensitivity: str = "balanced", mdl: dict
                     threshold: float | None = None) -> np.ndarray:
     mdl = mdl or model()
     ep = error_prob(X, mdl, lang)
-    ti = threshold if threshold is not None else sound_threshold(mdl, lang, sensitivity, True)
-    tf = threshold if threshold is not None else sound_threshold(mdl, lang, sensitivity, False)
-    return np.flatnonzero(np.where(X["initial"], ep >= ti, ep >= tf))
+    return np.flatnonzero(sound_mask(X, ep, mdl, lang, sensitivity, threshold))
 
 
 def _item(kind, w, wi, si, pi, pos, expected, heard, diff, eprob, prob, conf, start, end, gate=None, ipa=True):

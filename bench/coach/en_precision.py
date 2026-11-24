@@ -83,11 +83,12 @@ def measured_positions(ref, words, positions, items):
     return labels, marks, losses, reference_losses
 
 
-def evaluate_record(rec, audio, result):
+def evaluate_record(rec, audio, result, items=None):
     ref = result._pronunciada["ref"]
     inputs = coach.sound_inputs(result)
     positions = [(int(w), int(k)) for w, k in zip(inputs["word"], inputs["k"], strict=True)]
-    items = result.coaching(sensitivity="balanced")
+    if items is None:
+        items = result.coaching(sensitivity="balanced")
     labels, marks, expert_losses, reference_losses = measured_positions(
         ref, rec["labels"]["words"], positions, items)
     raw = set(coach.flagged_indices(inputs, "en", "balanced"))
@@ -260,9 +261,15 @@ def main():
     for name in ("prepare-table", "prepare-prototypes", "detail-oof", "fit", "verify-examples"):
         command = commands.add_parser(name)
         command.add_argument("--split", choices=["train"], required=True)
+    release_parser = commands.add_parser("release")
+    release_parser.add_argument("--split", choices=["test"], required=True)
     args = parser.parse_args()
     if args.command == "baseline":
         baseline(args.split)
+    elif args.command == "release":
+        from bench.coach.en_precision_release import release
+
+        release(args.split)
     elif args.command in ("fit", "verify-examples"):
         from bench.coach import en_precision_fit
 
