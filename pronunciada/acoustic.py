@@ -223,16 +223,19 @@ def _variant_path(src: str, outputs: dict) -> str:
 
 def embedding_model_path(name: str, precision: str, cache_dir: str | None = None,
                          outputs: dict | None = None) -> str:
-    """Path of the model variant that carries `outputs` (default EMBED_OUTPUTS) as extra outputs,
-    built (once) next to the original in the model cache.
+    """Path of the model variant that carries `outputs` (default EMBED_OUTPUTS) as extra outputs.
 
     Every subset of ALL_LAYER_OUTPUTS (which is every set the scorer asks for) is served by ONE
     file, `<model>.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.onnx`, that carries all of them; the
     session then fetches only the outputs asked for. Exposing a tensor as a graph output does not
     change what ONNX Runtime computes: log-probs and every activation are bit-identical to those
     of a file with fewer extra outputs (or none), fp32 and int8, and an output that is not fetched
-    costs no measurable time. Only a set outside ALL_LAYER_OUTPUTS gets a file of its own."""
+    costs no measurable time. In the model cache that file is the only model-sized file of its
+    precision (`backbone_model_file`). Only a set outside ALL_LAYER_OUTPUTS gets a file of its own,
+    built next to the download (with PRONUNCIADA_BACKBONE: next to that file)."""
     outputs = dict(EMBED_OUTPUTS) if outputs is None else outputs
+    if backbone_file() is None and set(outputs.values()) <= set(ALL_LAYER_OUTPUTS.values()):
+        return backbone_model_file(name, precision, cache_dir)
     src = backbone_file() or ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
     if set(outputs.values()) <= set(ALL_LAYER_OUTPUTS.values()):
         outputs = dict(ALL_LAYER_OUTPUTS)
@@ -256,6 +259,278 @@ def embedding_model_path(name: str, precision: str, cache_dir: str | None = None
             raise
         os.replace(part, dest)
     return dest
+
+
+# --------------------------------------------------------------------------- one file per precision
+# The model cache keeps ONE model-sized file per precision: the all-outputs variant, a superset of
+# the download (the same bytes, with the extra encoder outputs declared in the graph). A small
+# sidecar (`<variant>.json`) records the sizes and SHA-256 of the variant and of the download it was
+# built from. Once the variant is built and verified (both files load and give the same outputs on
+# a probe input), the download is removed; it is not downloaded again while the variant is present
+# and valid, and `ensure_model_file` restores it byte for byte from the variant (checked against the
+# recorded SHA-256) for a tool that asks for the plain file. A missing or invalid variant falls back
+# to the download (downloading it again if needed). PRONUNCIADA_KEEP_DOWNLOAD=1 keeps the download.
+# Nothing is removed from a model folder that is reached through a symbolic link (a shared cache
+# mirrored into a private one), and only files with this module's own names are ever removed.
+
+_SIDECAR_VERSION = 1
+_PROBE_FRAMES = 160
+
+
+def union_model_path(name: str, precision: str, cache_dir: str | None = None) -> str:
+    """Where the all-outputs variant of a precision lives in the model cache."""
+    d = os.path.join(cache_root(cache_dir), "models", name)
+    return _variant_path(os.path.join(d, PRECISION_FILES[precision]), ALL_LAYER_OUTPUTS)
+
+
+def _sidecar(path: str) -> str:
+    return path + ".json"
+
+
+def _read_sidecar(path: str) -> dict | None:
+    import json
+
+    try:
+        with open(_sidecar(path), encoding="utf-8") as f:
+            meta = json.load(f)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(meta, dict) or meta.get("version") != _SIDECAR_VERSION:
+        return None
+    return meta
+
+
+def union_valid(path: str) -> bool:
+    """The variant exists, has a sidecar of this format and the recorded size (cheap check, every
+    load; the SHA-256 is checked when the file is built and when the download is restored)."""
+    meta = _read_sidecar(path)
+    try:
+        return meta is not None and os.path.getsize(path) == int(meta["size"]) \
+            and list(meta.get("outputs") or ()) == list(ALL_LAYER_OUTPUTS.values())
+    except OSError:
+        return False
+
+
+def _sha256(path: str, chunk: int = 1 << 22) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            b = f.read(chunk)
+            if not b:
+                return h.hexdigest()
+            h.update(b)
+
+
+def _probe_outputs(ort, path: str) -> list:
+    """Log-probs of a fixed probe input (one thread, optimizer default): the load check."""
+    so = ort.SessionOptions()
+    so.log_severity_level = 3
+    so.intra_op_num_threads = 1
+    so.inter_op_num_threads = 1
+    so.enable_mem_pattern = False
+    sess = ort.InferenceSession(path, so, providers=["CPUExecutionProvider"])
+    x = (np.random.default_rng(20261123).standard_normal((1, _PROBE_FRAMES, 80)).astype(np.float32) - 5.0)
+    feeds = {}
+    for i in sess.get_inputs():
+        feeds[i.name] = x if len(i.shape) == 3 else np.array([_PROBE_FRAMES], dtype=np.int64)
+    out = sess.run(["log_probs"], feeds)
+    del sess
+    return out
+
+
+def _private_folder(d: str, root: str) -> bool:
+    """False when the model folder, or a folder between it and the cache root, is a symbolic link
+    (an overlay of a shared cache): nothing is removed there."""
+    p = os.path.abspath(d)
+    stop = os.path.abspath(root)
+    while True:
+        if os.path.islink(p):
+            return False
+        if p == stop or os.path.dirname(p) == p:
+            return True
+        p = os.path.dirname(p)
+
+
+def build_union(name: str, precision: str, cache_dir: str | None = None) -> str:
+    """Build the all-outputs variant from the download (streamed: the model is never held in memory),
+    check it, write its sidecar; then remove the download (see the block comment above)."""
+    import json
+
+    import onnxruntime as ort
+
+    src = ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
+    dest = union_model_path(name, precision, cache_dir)
+    part = f"{dest}.{os.getpid()}.part"
+    try:
+        if precision == "fp16":
+            write_with_graph_outputs(src, part, list(ALL_LAYER_OUTPUTS.values()), element_type=10)
+        else:
+            write_with_graph_outputs(src, part, list(ALL_LAYER_OUTPUTS.values()))
+        a = _probe_outputs(ort, src)
+        b = _probe_outputs(ort, part)
+        if len(a) != len(b) or not all(np.array_equal(x, y) for x, y in zip(a, b)):
+            raise ValueError("the all-outputs variant does not reproduce the model's outputs")
+        meta = {"version": _SIDECAR_VERSION, "model": name, "precision": precision,
+                "source": PRECISION_FILES[precision], "source_size": os.path.getsize(src),
+                "source_sha256": _sha256(src), "outputs": list(ALL_LAYER_OUTPUTS.values()),
+                "size": os.path.getsize(part), "sha256": _sha256(part)}
+        os.replace(part, dest)
+    except BaseException:
+        if os.path.exists(part):
+            os.remove(part)
+        raise
+    tmp = f"{_sidecar(dest)}.{os.getpid()}.part"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=1)
+    os.replace(tmp, _sidecar(dest))
+    return dest
+
+
+def model_cached(name: str = "zipa-small-crctc-500k", precision: str = "fp32", cache_dir: str | None = None) -> bool:
+    """The backbone of a precision is in the model cache (the download or the all-outputs file
+    that replaces it), so loading it needs no network."""
+    d = os.path.join(cache_root(cache_dir), "models", name)
+    return os.path.exists(os.path.join(d, PRECISION_FILES[precision])) or union_valid(
+        union_model_path(name, precision, cache_dir))
+
+
+def download_size(name: str, precision: str, cache_dir: str | None = None) -> int:
+    """Size in bytes of the downloadable backbone file of a precision: the file in the model cache,
+    or, once it was replaced by the all-outputs variant, the size recorded in the sidecar."""
+    d = os.path.join(cache_root(cache_dir), "models", name)
+    plain = os.path.join(d, PRECISION_FILES[precision])
+    if os.path.exists(plain):
+        return os.path.getsize(plain)
+    meta = _read_sidecar(union_model_path(name, precision, cache_dir))
+    if meta is None:
+        raise FileNotFoundError(plain)
+    return int(meta["source_size"])
+
+
+def backbone_model_file(name: str, precision: str, cache_dir: str | None = None) -> str:
+    """The one backbone file of a precision in the model cache (all extra outputs declared): built on
+    first use, reused afterwards; leftovers of earlier versions are removed once it is in place."""
+    dest = union_model_path(name, precision, cache_dir)
+    if not union_valid(dest):
+        dest = build_union(name, precision, cache_dir)
+    remove_leftovers(name, precision, cache_dir)
+    return dest
+
+
+def restore_download(name: str, precision: str, cache_dir: str | None = None, dest: str | None = None) -> str:
+    """Write the plain download back from the all-outputs variant (the inverse of
+    write_with_graph_outputs, streamed) and check it against the recorded SHA-256; `dest`
+    defaults to its place in the model cache."""
+    union = union_model_path(name, precision, cache_dir)
+    meta = _read_sidecar(union)
+    if meta is None or not union_valid(union):
+        raise FileNotFoundError(union)
+    dest = dest or os.path.join(os.path.dirname(union), PRECISION_FILES[precision])
+    extra = b"".join(_ld(12, _value_info(n)) for n in meta["outputs"])
+    part = f"{dest}.{os.getpid()}.part"
+    size = os.path.getsize(union)
+    try:
+        with open(union, "rb") as f:
+            i = 0
+            while i < size:
+                f.seek(i)
+                head = f.read(32)
+                key, j = _read_varint(head, 0)
+                field, wt = key >> 3, key & 7
+                if wt == 0:
+                    _, j = _read_varint(head, j)
+                    i += j
+                elif wt == 1:
+                    i += j + 8
+                elif wt == 5:
+                    i += j + 4
+                elif wt == 2:
+                    ln, k = _read_varint(head, j)
+                    if field == 7:
+                        with open(part, "wb") as out:
+                            _copy_range(f, out, 0, i)
+                            out.write(_varint((7 << 3) | 2) + _varint(ln - len(extra)))
+                            _copy_range(f, out, i + k, i + k + ln - len(extra))
+                            f.seek(i + k + ln - len(extra))
+                            if f.read(len(extra)) != extra:
+                                raise ValueError("the variant does not end its graph with the recorded outputs")
+                            _copy_range(f, out, i + k + ln, size)
+                        break
+                    i += k + ln
+                else:
+                    raise ValueError(f"unsupported protobuf wire type {wt}")
+        if _sha256(part) != meta["source_sha256"]:
+            raise ValueError("restored model does not match the recorded SHA-256")
+        os.replace(part, dest)
+    except BaseException:
+        if os.path.exists(part):
+            os.remove(part)
+        raise
+    return dest
+
+
+_LEFTOVER = None
+
+
+def _leftover_re():
+    import re
+
+    global _LEFTOVER
+    if _LEFTOVER is None:
+        stems = "|".join(re.escape(f[:-len(".onnx")]) for f in PRECISION_FILES.values())
+        # <stem>.emb[-keys][.ort<version>-<machine>-<cpu>].onnx
+        _LEFTOVER = re.compile(rf"^(?P<stem>{stems})\.emb(?P<keys>-[A-Za-z0-9-]+)?"
+                               rf"(?P<opt>\.ort[0-9][0-9A-Za-z.+]*-[A-Za-z0-9_]+-[0-9a-f]{{8}})?\.onnx$")
+    return _LEFTOVER
+
+
+def leftover_files(names, precision: str, preopt: bool, preopt_name: str | None = None) -> list[str]:
+    """Which of the file names `names` (a model folder's listing) are leftovers once the
+    all-outputs variant of `precision` is in place: the plain download, copies with other output
+    sets (`<model>.emb.onnx`, `<model>.emb-<keys>.onnx`), and saved optimized graphs except the
+    current one when PRONUNCIADA_PREOPT=1. Pure name matching; nothing else is ever listed."""
+    plain = PRECISION_FILES[precision]
+    stem = plain[:-len(".onnx")]
+    union = _variant_path(plain, ALL_LAYER_OUTPUTS)
+    out = []
+    for f in names:
+        if f == plain:
+            out.append(f)
+            continue
+        m = _leftover_re().match(f)
+        if not m or m.group("stem") != stem or f == union:
+            continue
+        if m.group("opt") and preopt and f == preopt_name:
+            continue
+        out.append(f)
+    return sorted(out)
+
+
+def remove_leftovers(name: str, precision: str, cache_dir: str | None = None) -> list[str]:
+    """Remove `leftover_files` of a precision from the model folder (only when its all-outputs
+    variant is valid and the folder is not reached through a symbolic link)."""
+    root = cache_root(cache_dir)
+    union = union_model_path(name, precision, cache_dir)
+    d = os.path.dirname(union)
+    if not union_valid(union) or not _private_folder(d, root):
+        return []
+    preopt = preopt_enabled()
+    opt_name = os.path.basename(preoptimized_model_path(union)) if preopt else None
+    removed = []
+    for f in leftover_files(os.listdir(d), precision, preopt, opt_name):
+        p = os.path.join(d, f)
+        if os.path.islink(p) or not os.path.isfile(p):
+            continue
+        if f == PRECISION_FILES[precision] and os.environ.get("PRONUNCIADA_KEEP_DOWNLOAD", "") == "1":
+            continue
+        try:
+            os.remove(p)
+            removed.append(p)
+        except OSError:
+            pass
+    return removed
 
 
 @functools.lru_cache(maxsize=1)
@@ -310,74 +585,64 @@ def preoptimized_model_path(src_variant: str) -> str:
 
 
 def preopt_enabled() -> bool:
-    """PRONUNCIADA_PREOPT=0 loads the backbone the previous way (optimized at every load)."""
-    return os.environ.get("PRONUNCIADA_PREOPT", "1") != "0"
+    """PRONUNCIADA_PREOPT=1 saves ONNX Runtime's optimized graph of the backbone and loads it on
+    later runs (session creation int8 ~0.55 -> ~0.11 s, fp32 ~0.6 -> ~0.25 s). Off by default: the
+    saved graph is a second model-sized file per precision (67 MB int8, 248 MB fp32)."""
+    return os.environ.get("PRONUNCIADA_PREOPT", "0") == "1"
 
 
 def _preoptimized_session(ort, name: str, precision: str, cache_dir, so, providers):
     """Backbone session with every extra output, loaded from the saved optimized graph with the
-    optimizer off (session creation int8 ~0.55 -> ~0.11 s, fp32 ~0.6 -> ~0.25 s); built on first
-    use from the all-outputs variant, which is deleted again when this call created it, so the
-    cache holds one copy next to the download. ONNX Runtime runs the same optimized graph either
-    way: log-probs and activations are bit-identical to a session optimized at load."""
-    src = ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
-    union = _variant_path(src, ALL_LAYER_OUTPUTS)
+    optimizer off; built on first use from the all-outputs variant, which stays (it is the cache's
+    backbone file). ONNX Runtime runs the same optimized graph either way: log-probs and activations
+    are bit-identical to a session optimized at load."""
+    union = backbone_model_file(name, precision, cache_dir)
     dest = preoptimized_model_path(union)
-    if os.path.exists(dest) and os.path.getmtime(dest) >= os.path.getmtime(src):
+    if os.path.exists(dest) and os.path.getmtime(dest) >= os.path.getmtime(union):
         level = so.graph_optimization_level
         so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
         try:
             return ort.InferenceSession(dest, so, providers=providers)
         except Exception:  # noqa: BLE001  (unreadable / other build: rebuilt below)
             so.graph_optimization_level = level
-    had_union = os.path.exists(union) and os.path.getmtime(union) >= os.path.getmtime(src)
-    path = embedding_model_path(name, precision, cache_dir, ALL_LAYER_OUTPUTS)
     part = f"{dest}.{os.getpid()}.part"
     so.optimized_model_filepath = part
     try:
-        sess = ort.InferenceSession(path, so, providers=providers)
+        sess = ort.InferenceSession(union, so, providers=providers)
     finally:
         so.optimized_model_filepath = ""
     if os.path.exists(part):
         os.replace(part, dest)
-        if not had_union:
-            try:
-                os.remove(path)
-            except OSError:
-                pass
     return sess
 
 
 def stale_model_variants(name: str = "zipa-small-crctc-500k", cache_dir: str | None = None) -> list[str]:
-    """Runtime-built backbone copies in the model cache that this version no longer reads:
-    earlier versions wrote one full copy of the backbone per set of extra outputs
-    (`<model>.emb.onnx`, `<model>.emb-<keys>.onnx`), about 67 MB (int8) / 248 MB (fp32) each;
-    the all-outputs variant is also stale once its optimized graph for this ONNX Runtime exists,
-    and so are optimized graphs of other ONNX Runtime versions or machines. Nothing deletes them
-    automatically (another process, possibly an older version, may still be using them);
-    `remove_stale_model_variants` does it on request."""
+    """Model-sized files in the model cache that this version no longer reads, for every precision
+    whose all-outputs variant is in place (`leftover_files`): the plain download, copies with other
+    output sets written by earlier versions (`<model>.emb.onnx`, `<model>.emb-<keys>.onnx`) and
+    saved optimized graphs (all of them, or all but the current one with PRONUNCIADA_PREOPT=1).
+    `backbone_model_file` removes them automatically for its precision; this lists them."""
     d = os.path.join(cache_root(cache_dir), "models", name)
     if not os.path.isdir(d):
         return []
-    keep = set()
-    for f in PRECISION_FILES.values():
-        union = _variant_path(os.path.join(d, f), ALL_LAYER_OUTPUTS)
-        opt = preoptimized_model_path(union)
-        keep.add(os.path.basename(opt))
-        if not (preopt_enabled() and os.path.exists(opt)):
-            keep.add(os.path.basename(union))
-    bases = tuple(f[:-len(".onnx")] + ".emb" for f in PRECISION_FILES.values())
-    return sorted(os.path.join(d, f) for f in os.listdir(d)
-                  if f.endswith(".onnx") and f not in keep and any(f.startswith(b + ".") or f.startswith(b + "-")
-                                                                   for b in bases))
+    names = os.listdir(d)
+    out = []
+    preopt = preopt_enabled()
+    for prec in PRECISION_FILES:
+        union = union_model_path(name, prec, cache_dir)
+        if not union_valid(union):
+            continue
+        opt = os.path.basename(preoptimized_model_path(union)) if preopt else None
+        out += [os.path.join(d, f) for f in leftover_files(names, prec, preopt, opt)]
+    return sorted(out)
 
 
 def remove_stale_model_variants(name: str = "zipa-small-crctc-500k", cache_dir: str | None = None) -> list[str]:
-    """Delete the files of `stale_model_variants`; returns their paths."""
-    out = stale_model_variants(name, cache_dir)
-    for p in out:
-        os.remove(p)
-    return out
+    """Delete the files of `stale_model_variants` (same safeguards as `remove_leftovers`)."""
+    out = []
+    for prec in PRECISION_FILES:
+        out += remove_leftovers(name, prec, cache_dir)
+    return sorted(out)
 
 
 def cache_root(cache_dir: str | None = None) -> str:
@@ -400,8 +665,16 @@ def _download(url: str, dest: str) -> None:
 
 
 def ensure_model_file(name: str, file: str, cache_dir: str | None = None) -> str:
+    """A file of the model's Hugging Face repository in the model cache, downloaded if missing. A
+    backbone file whose all-outputs variant is in place is restored from it instead (no download)."""
     path = os.path.join(cache_root(cache_dir), "models", name, file)
     if not os.path.exists(path):
+        prec = next((p for p, f in PRECISION_FILES.items() if f == file), None)
+        if prec is not None and union_valid(union_model_path(name, prec, cache_dir)):
+            try:
+                return restore_download(name, prec, cache_dir)
+            except (OSError, ValueError):
+                pass
         _download(HF_URL.format(name=name, file=file), path)
     return path
 
@@ -427,7 +700,12 @@ class AcousticModel:
             if hasattr(ort, "preload_dlls"):
                 ort.preload_dlls()
         self.name, self.precision = name, precision
-        model_path = backbone_file() or ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
+        model_path = backbone_file()
+        if model_path is None:
+            try:
+                model_path = backbone_model_file(name, precision, cache_dir)   # the one file of the cache
+            except Exception:  # noqa: BLE001  (cannot build / write it: use the download as before)
+                model_path = ensure_model_file(name, PRECISION_FILES[precision], cache_dir)
         self.embeddings = False
         self.embed_outputs = embed_outputs_for(embeddings) if embeddings else {}
         tok_path = ensure_model_file(name, "tokens.txt", cache_dir)

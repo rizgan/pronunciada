@@ -1,7 +1,7 @@
 [project]
 name = "pronunciada"
-version = "1.0.2"
-description = "Pronunciation assessment for ten languages on CPU: phoneme, word and sentence scores, tones and stress"
+version = "1.1.0"
+description = "On-device pronunciation assessment in 10 languages: phoneme, word and sentence scores, tones and stress"
 readme = "README.md"
 requires-python = ">=3.10"
 # Code: Apache-2.0. Bundled data: the it / pt / ru lexicons under pronunciada/data/lex are
@@ -32,12 +32,11 @@ classifiers = [
 dependencies = ["numpy>=1.24", "onnxruntime>=1.16", "kaldi-native-fbank>=1.18", "soundfile>=0.12"]
 
 [project.optional-dependencies]
-# Text front-ends that need third-party packages (pinned versions: requirements-text-*.txt).
+# Text front-ends that need third-party packages (pinned versions: requirements/text-*.txt).
 zh = ["pypinyin>=0.55", "jieba>=0.42", "opencc-python-reimplemented>=0.1.7"]
 ja = ["pyopenjtalk-plus>=0.4.1"]
-numbers = ["num2words>=0.5.14"]        # LGPL-2.1+, optional: digits read out as words
 mcp = ["mcp>=2"]                        # MIT, optional: `pronunciada mcp` only
-all = ["pronunciada[zh,ja,numbers,mcp]"]
+all = ["pronunciada[zh,ja,mcp]"]
 dev = ["pytest", "scipy>=1.10"]
 # Benchmarks and training only (bench/); never imported by pronunciada/ (see requirements-*.txt).
 bench = ["pyarrow>=15", "fsspec>=2024.2", "aiohttp>=3.9", "requests>=2.31", "panphon>=0.20",

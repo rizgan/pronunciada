@@ -172,11 +172,15 @@ Runtime (core, `pip install pronunciada`):
 | kaldi-native-fbank | Apache-2.0 | |
 | soundfile | BSD-3-Clause | wheels bundle libsndfile (LGPL-2.1), dynamically loaded |
 
-Runtime extras: `[zh]` pypinyin (MIT), jieba (MIT), opencc-python-reimplemented (Apache-2.0);
-`[ja]` pyopenjtalk-plus (MIT; bundles Open JTalk Modified-BSD, NAIST-jdic BSD-3, UniDic-derived
-entries BSD-3 option, Unihan Unicode-3.0, an unused HTS voice CC BY 3.0) with sudachipy and
-sudachidict-core (Apache-2.0), pydantic family (MIT); `[numbers]` num2words (LGPL-2.1-or-later,
-optional, imported unmodified). Korean needs nothing extra.
+Runtime extras (layer 2 of the text front-ends, docs/TEXT_LAYERS.md): `[zh]` pypinyin (MIT),
+jieba (MIT), opencc-python-reimplemented (Apache-2.0); `[ja]` pyopenjtalk-plus (MIT; bundles
+Open JTalk Modified-BSD, NAIST-jdic BSD-3, UniDic-derived entries BSD-3 option, Unihan
+Unicode-3.0, an unused HTS voice CC BY 3.0) and the pydantic family (MIT). pyopenjtalk-plus's
+metadata also pulls in sudachipy and sudachidict-core (Apache-2.0); Pronunciada never loads the
+Sudachi dictionary (tests/test_ja_no_sudachi.py) and works with both uninstalled. Korean, the
+European languages and digits need nothing extra: numbers are spelled by
+`pronunciada/text/numbers.py` (Apache-2.0, part of this project); the LGPL package num2words
+(the former `[numbers]` extra) is no longer used anywhere.
 
 Benchmark / training / tests only (never imported by `pronunciada/`): scipy (BSD-3), torch (BSD-3), scikit-learn
 (BSD-3), pandas (BSD-3), pyarrow (Apache-2.0), fsspec (BSD-3), aiohttp (Apache-2.0), requests

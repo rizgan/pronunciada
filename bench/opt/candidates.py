@@ -19,6 +19,12 @@ FILE = Path(__file__).resolve().parent / "candidates.json"
 
 def spec(name: str, code: str) -> dict:
     d = json.loads(FILE.read_text())[name]
+    from .common import PRECISION_FILES, default_backbone
+
+    # {M}/<download> = the plain downloaded file of that precision (restored from the cache's one file)
+    for prec, f in PRECISION_FILES.items():
+        if f"{{M}}/{f}" in json.dumps(d):
+            d = json.loads(json.dumps(d).replace(f"{{M}}/{f}", str(default_backbone(prec))))
     s = json.loads(json.dumps(d).replace("{C}", str(opt_root() / "candidates")))
     return load_spec({"name": name, "code": code, **s})
 

@@ -5,6 +5,7 @@ scripts/graphics/.fonts/ and are not part of the repository.
 """
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import tempfile
@@ -68,3 +69,24 @@ def render(html: str, out: Path, width: int, height: int, scale: int = 2, transp
         subprocess.run(cmd + [page.as_uri()], check=True, capture_output=True)
         if out.suffix in (".jpg", ".jpeg"):       # photographic backgrounds are far smaller as JPEG
             subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(png), "-q:v", "2", str(out)], check=True)
+
+
+def height_of(html: str, width: int) -> int:
+    """Height in CSS pixels that an HTML string takes at the given width, measured in headless Chrome."""
+    probe = ("<script>addEventListener('load',()=>document.fonts.ready.then(()=>{"
+             "document.title=String(Math.ceil(document.documentElement.getBoundingClientRect().height))}))</script>")
+    with tempfile.TemporaryDirectory() as tmp:
+        page = Path(tmp) / "page.html"
+        page.write_text(html.replace("</body>", probe + "</body>"), encoding="utf-8")
+        out = subprocess.run([chrome(), "--headless=new", "--disable-gpu", "--hide-scrollbars", "--allow-file-access-from-files",
+                              f"--window-size={width},2000", "--virtual-time-budget=4000", "--dump-dom", page.as_uri()],
+                             check=True, capture_output=True, text=True).stdout
+    return int(re.search(r"<title>(\d+)</title>", out).group(1))
+
+
+def render_card(body: str, css: str, out: Path, width: int = 808) -> None:
+    """Render one figure in the site's light style as a PNG with a transparent surround, as tall as its content."""
+    html = (f"<!doctype html><html><head><meta charset='utf-8'><title>0</title><style>{font_css()}{css}"
+            "html,body{background:transparent;margin:0}.chart{margin:3px}</style></head>"
+            f"<body>{body}</body></html>")
+    render(html, out, width + 6, height_of(html, width + 6), transparent=True)

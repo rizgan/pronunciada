@@ -45,13 +45,13 @@ def main(out: str) -> None:
                 if data:
                     events.append([round(time.monotonic() - t0, 4), "o", data.decode("utf-8", "replace")])
 
-    pump(0.8)
+    pump(0.5)
     for ch in COMMAND:
         os.write(fd, ch.encode())
-        pump(0.032)
+        pump(0.014)
     pump(0.5)
     os.write(fd, b"\n")
-    pump(7.0)                      # stop recording here; the shell is closed off the record
+    pump(4.0)                      # stop recording here; the shell is closed off the record
     os.write(fd, b"exit\n")
     header = {"version": 2, "width": COLS, "height": ROWS, "timestamp": int(time.time()), "env": {"TERM": "xterm-256color"}}
     Path(out).write_text("\n".join([json.dumps(header)] + [json.dumps(e, ensure_ascii=False) for e in events]) + "\n", encoding="utf-8")

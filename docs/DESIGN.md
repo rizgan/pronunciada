@@ -163,6 +163,13 @@ numbers and say so. Controlled errors are a proxy for real learner errors and ar
   plus small permissively-licensed per-language text packages. Training-only deps (torch, sklearn,
   datasets …) stay out of the runtime path.
 - Large data and model files go under `~/.cache/pronunciada/` (override with `PRONUNCIADA_CACHE`), never in the repo.
+  The model cache keeps one backbone file per precision: the first load builds the copy that
+  declares the extra encoder outputs (`model[.int8].emb-enc0-…-final.onnx`, plus a small `.json`
+  sidecar with sizes and SHA-256), checks it against the download and then removes the download and
+  older copies (`pronunciada/acoustic.py`, `backbone_model_file`). `PRONUNCIADA_PREOPT=1` also saves
+  ONNX Runtime's optimized graph (faster later loads, a second model-sized file);
+  `PRONUNCIADA_KEEP_DOWNLOAD=1` keeps the download. A model folder reached through a symbolic link
+  is never cleaned.
 - Tests under `tests/`, runnable offline except those marked `@pytest.mark.network`.
 
 ## 7. What ships (round 18), where it differs from the plan above

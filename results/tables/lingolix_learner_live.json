@@ -1,0 +1,120 @@
+{
+ "vendor": "Lingolix",
+ "dry_run": false,
+ "generated_utc": "2026-11-23T19:52:25Z",
+ "answers": {
+  "heroico": {
+   "answered": 600,
+   "rejected": 0,
+   "unanswered": 0,
+   "items": 600,
+   "versions": {
+    "2026-11": 600
+   },
+   "first_utc": "2026-11-23T18:35:16Z",
+   "last_utc": "2026-11-23T18:45:15Z",
+   "rejections": [],
+   "n_speakers": 48,
+   "n_speakers_answered": 48
+  }
+ },
+ "ledger": {
+  "heroico": {
+   "attempts": 601,
+   "booked": 21.96114583333334,
+   "statuses": {
+    "401": 1,
+    "200": 600
+   }
+  }
+ },
+ "results": {
+  "heroico": {
+   "n_utts_answered": 600,
+   "USMA, native vs learner, prompt-matched (primary)": {
+    "n": 450,
+    "n_speakers": 18,
+    "natives": 200,
+    "azure_answered": 450,
+    "pronunciada": {
+     "value": 0.6688781664656213,
+     "ci": [
+      0.5038201163293646,
+      0.817983575008951
+     ]
+    },
+    "azure": {
+     "value": 0.5808202653799759,
+     "ci": [
+      0.4367508297771456,
+      0.7138683592058878
+     ]
+    },
+    "lingolix": {
+     "value": 0.6025331724969843,
+     "ci": [
+      0.5051998911611867,
+      0.6971747696024179
+     ]
+    },
+    "delta": {
+     "value": -0.06634499396863691,
+     "ci": [
+      -0.21272974925188312,
+      0.10011981101052296
+     ],
+     "p": 0.3935606439356064,
+     "of": "lingolix - pronunciada"
+    },
+    "n_resamples": 10000,
+    "seed": 80
+   },
+   "USMA learners vs USMA + HEROICO natives, prompt-matched (secondary)": {
+    "n": 600,
+    "n_speakers": 48,
+    "natives": 350,
+    "azure_answered": 600,
+    "pronunciada": {
+     "value": 0.6177884615384616,
+     "ci": [
+      0.49137862002695,
+      0.735200959223981
+     ]
+    },
+    "azure": {
+     "value": 0.5415521978021978,
+     "ci": [
+      0.43101848687433236,
+      0.6464277320706135
+     ]
+    },
+    "lingolix": {
+     "value": 0.540521978021978,
+     "ci": [
+      0.44136728725490937,
+      0.6343841255094194
+     ]
+    },
+    "delta": {
+     "value": -0.07726648351648358,
+     "ci": [
+      -0.1856352400514879,
+      0.04193534667133307
+     ],
+     "p": 0.20417958204179582,
+     "of": "lingolix - pronunciada"
+    },
+    "n_resamples": 10000,
+    "seed": 81
+   }
+  }
+ },
+ "mapping": {
+  "sentence_total": "overall if served, else the mean of words[].accuracy (lingolix.utterance_score)",
+  "word": "words[].accuracy (lingolix_live.parse_response)",
+  "scale": "0-1 (reported x 100)",
+  "source": "bench/third_party/lingolix_live.py (working harness)"
+ },
+ "cache": "$PRONUNCIADA_CACHE/third_party/lingolix_learner_live",
+ "n_boot": 10000
+}

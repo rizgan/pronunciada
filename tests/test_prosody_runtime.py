@@ -26,8 +26,6 @@ def model_stem(name):
         return str(RETIRED / name)
     pytest.skip(f"{name} neither in the package nor in {RETIRED}")
 
-ZIPA = Path(os.environ.get("PRONUNCIADA_CACHE", os.path.expanduser("~/.cache/pronunciada"))) / "models" / \
-    "zipa-small-crctc-500k" / "model.onnx"
 
 
 def _say(text, voice, tmp_path):
@@ -45,7 +43,7 @@ def _say(text, voice, tmp_path):
 
 @pytest.fixture(scope="module")
 def acoustic():
-    if not ZIPA.exists():
+    if not _model_cached():
         pytest.skip("ZIPA model not cached")
     from pronunciada.acoustic import AcousticModel
 
@@ -217,3 +215,9 @@ def test_v2_parity_with_training_pipeline(acoustic, tmp_path, monkeypatch):
     X = np.stack([context_input(f, w, i) for i in range(len(w))])
     P = softmax(predict_utts(net, kind, [X])[0], sc.meta["temperature"])
     assert np.abs(got - P).max() < 0.02 and (got.argmax(1) == P.argmax(1)).mean() > 0.9
+
+
+def _model_cached():
+    from pronunciada.acoustic import model_cached
+
+    return model_cached()

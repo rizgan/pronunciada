@@ -8,6 +8,6 @@ results/cache/
 .DS_Store
 .claude/
 LAUNCH_CHECKLIST.md
-space/samples/
+huggingface/space/samples/
 LAUNCH_DRAFTS.md
 audition/

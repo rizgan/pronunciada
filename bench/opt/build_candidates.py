@@ -48,7 +48,9 @@ def sha1(p: Path) -> str:
 
 
 def _src(prec: str) -> Path:
-    return MODELS / ("model.onnx" if prec == "fp32" else "model.int8.onnx")
+    from common import default_backbone
+
+    return default_backbone(prec)
 
 
 def with_outputs(m):

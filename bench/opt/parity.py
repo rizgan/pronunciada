@@ -24,6 +24,7 @@ import argparse
 import json
 import math
 import os
+import re
 import shutil
 import sys
 import time
@@ -36,6 +37,9 @@ from .common import LANGS, load_spec, materialize, opt_root, practice_clips, spe
 from .proc import Child
 
 CATS = ("sentence", "word", "sound", "syllable", "rescore", "details", "coaching", "tips", "azure layout")
+# the reported probabilities themselves (strictness of the result), on top of the categories above
+PROB_KEYS = (("sentence P", re.compile(r"^result\.prob$")), ("word P", re.compile(r"^result\.words\[\d+\]\.prob$")),
+             ("sound P", re.compile(r"^result\.words\[\d+\]\.phones\[\d+\]\.prob$")))
 
 
 def _flat(x, pre="", out=None):
@@ -72,7 +76,8 @@ def _num(v) -> bool:
 
 def compare_records(A: list[dict], B: list[dict]) -> dict:
     """Score dumps (lists of per-clip records, same clip order) -> difference statistics."""
-    st = {c: {"values": 0, "numeric": 0, "differ": 0, "max_abs_diff": 0.0, "sum_abs_diff": 0.0} for c in CATS}
+    st = {c: {"values": 0, "numeric": 0, "differ": 0, "max_abs_diff": 0.0, "sum_abs_diff": 0.0}
+          for c in CATS + tuple(n for n, _ in PROB_KEYS)}
     clips_diff, examples, other = 0, [], 0
     ida, idb = [r["id"] for r in A], [r["id"] for r in B]
     if ida != idb:
@@ -93,6 +98,14 @@ def compare_records(A: list[dict], B: list[dict]) -> dict:
                     d = math.inf
                 s["sum_abs_diff"] += d
                 s["max_abs_diff"] = max(s["max_abs_diff"], d)
+                for pn, rx in PROB_KEYS:
+                    if rx.match(k):
+                        q = st[pn]
+                        q["values"] += 1
+                        q["numeric"] += 1
+                        q["sum_abs_diff"] += d
+                        q["max_abs_diff"] = max(q["max_abs_diff"], d)
+                        q["differ"] += d > 0
                 if d > 0:
                     s["differ"] += 1
                     any_diff = True
@@ -107,9 +120,9 @@ def compare_records(A: list[dict], B: list[dict]) -> dict:
     for s in st.values():
         s["mean_abs_diff"] = s.pop("sum_abs_diff") / s["numeric"] if s["numeric"] else 0.0
     return {"n_clips": len(A), "n_clips_any_score_differs": clips_diff, "by_category": st,
-            "max_abs_diff": max(s["max_abs_diff"] for s in st.values()),
-            "n_values": sum(s["values"] for s in st.values()),
-            "n_values_differ": sum(s["differ"] for s in st.values()) + other, "examples": examples}
+            "max_abs_diff": max(st[c]["max_abs_diff"] for c in CATS),
+            "n_values": sum(st[c]["values"] for c in CATS),
+            "n_values_differ": sum(st[c]["differ"] for c in CATS) + other, "examples": examples}
 
 
 def compare_posteriors(pa: list[Path], pb: list[Path]) -> dict:
@@ -205,12 +218,16 @@ def run(ref: dict, cand: dict, langs, n: int | None, threads: int, work: Path | 
     out["max_abs_diff"] = max(r["max_abs_diff"] for r in B)
     out["max_abs_diff_posteriors"] = {k: max(r["posteriors"][k]["max_abs_diff"] for r in B) for k in ("raw", "adapted")}
     out["n_values"] = sum(r["n_values"] for r in B)
-    by = defaultdict(lambda: {"values": 0, "differ": 0, "max_abs_diff": 0.0})
+    by = defaultdict(lambda: {"values": 0, "differ": 0, "max_abs_diff": 0.0, "numeric": 0, "sum": 0.0})
     for r in B:
         for c, s in r["by_category"].items():
             by[c]["values"] += s["values"]
             by[c]["differ"] += s["differ"]
             by[c]["max_abs_diff"] = max(by[c]["max_abs_diff"], s["max_abs_diff"])
+            by[c]["numeric"] += s["numeric"]
+            by[c]["sum"] += s["mean_abs_diff"] * s["numeric"]
+    for c in by.values():
+        c["mean_abs_diff"] = c.pop("sum") / c["numeric"] if c["numeric"] else 0.0
     out["by_category"] = dict(by)
     out["verdict"] = (f"exactly identical: max |diff| = 0 on {out['n_values']:,} values and every posterior, "
                       f"{out['n_clips']} clips" if out["identical"] else

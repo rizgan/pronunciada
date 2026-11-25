@@ -153,10 +153,10 @@ def main(argv=None) -> int:
     out = Path(a.out).expanduser()
     data_dir = ROOT / "pronunciada" / "data"
     lic = licences()
-    from pronunciada.acoustic import cache_root
+    from pronunciada.acoustic import cache_root, download_size
 
     mdir = Path(cache_root()) / "models" / "zipa-small-crctc-500k"
-    bb = {"int8": (mdir / "model.int8.onnx").stat().st_size, "fp32": (mdir / "model.onnx").stat().st_size,
+    bb = {"int8": download_size("zipa-small-crctc-500k", "int8"), "fp32": download_size("zipa-small-crctc-500k", "fp32"),
           "tokens": (mdir / "tokens.txt").stat().st_size}
     table, sets = [], {}
     tmp = Path(tempfile.mkdtemp(prefix="bundles_"))

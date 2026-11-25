@@ -1,0 +1,184 @@
+{
+ "scope": "Complete pronunciation-assessment systems: a packaged system (library, app or API) that takes a recording and the text that was read and returns scores at sound, word and sentence level.",
+ "systems": {
+  "pronunciada-fp32": {
+   "label": "Pronunciada 1.0.2 (main), fp32 backbone (default)",
+   "category": "open, purpose-built",
+   "version": "1.0.2, repository main at fce7918; package fingerprint 6b418b1526ff946d",
+   "licence_code": "Apache-2.0",
+   "licence_weights": "ZIPA-small backbone CC BY 4.0; Pronunciada's own heads Apache-2.0",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "supported",
+    "es": "supported",
+    "de": "supported"
+   },
+   "given": "recording + prompt text (the library's own text front end makes the phones)",
+   "levels": "sound, word, sentence",
+   "score_used": {
+    "sound": "sound model regression output (0-2) for Pearson; 1 - P(correct) at strictness 0.5 for marked-sound detection",
+    "word": "word regression output",
+    "sentence": "SentenceResult.scores total / accuracy / fluency / prosodic; the suite's sentence score is scores[\"total\"]",
+    "OMPAL word": "min WordResult.prob over the words covering the character"
+   },
+   "run": "bench.learnerbench.run_pronunciada --variant fp32, 3 worker processes x 1 ONNX thread"
+  },
+  "pronunciada-int8": {
+   "label": "Pronunciada 1.0.2 (main), shipped int8 backbone",
+   "category": "open, purpose-built",
+   "version": "as fp32, Scorer(precision=\"int8\")",
+   "licence_code": "Apache-2.0",
+   "licence_weights": "ZIPA-small (int8 file) CC BY 4.0",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "supported",
+    "es": "supported",
+    "de": "supported"
+   },
+   "given": "as fp32",
+   "levels": "sound, word, sentence",
+   "score_used": "as fp32",
+   "run": "bench.learnerbench.run_pronunciada --variant int8"
+  },
+  "openpronounce-1.1.0": {
+   "label": "OpenPronounce 1.1.0, default mode",
+   "category": "open, purpose-built",
+   "version": "1.1.0 (latest release on PyPI and GitHub on 2026-11-23; tag v1.1.0 = bd51333); installed from the PyPI wheel (sha256 10eb00eeb94a3f0050619414f6bfc9160205f8bee83013ace723719ff830dd80) in its own virtualenv, never imported into Pronunciada's",
+   "licence_code": "AGPL-3.0-or-later (commercial dual licence offered)",
+   "licence_weights": "facebook/wav2vec2-lv-60-espeak-cv-ft @ ae45363 Apache-2.0; facebook/wav2vec2-large-960h @ bdeaacd Apache-2.0 (English transcript); jonatasgrosman/wav2vec2-large-xlsr-53-spanish @ 96d7e9b and -german @ 4b8a029 Apache-2.0 (transcript, non-English default mode); Piper voices rhasspy/piper-voices @ e9c8a39 (offline reference voice, used instead of the online gTTS default); scoring models shipped in the package (AGPL)",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "not supported",
+    "es": "supported (marked experimental by the project)",
+    "de": "supported (marked experimental by the project)"
+   },
+   "given": "recording + prompt text (its own G2P)",
+   "levels": "sound, word, sentence",
+   "score_used": {
+    "sound": "100 (1 - p), p = its phone model's probability that the expected sound is wrong, aligned to Pronunciada's reference sounds (bench.rivals.convert.to_reference)",
+    "word": "100 (1 - p) of its word model",
+    "sentence": "`score` (= scores[\"total\"]) and scores accuracy / fluency / prosodic"
+   },
+   "run": "bench.rivals.openpronounce --mode default, CPU, 4 torch threads, offline (Piper voice, network blocked in the worker)"
+  },
+  "openpronounce-1.1.0-student": {
+   "label": "OpenPronounce 1.1.0 with its distilled English phone model",
+   "category": "open, purpose-built",
+   "version": "1.1.0 with OPENPRONOUNCE_PHONEME_MODEL=OpenPronounce/wav2vec2-base-phones-en @ 2e12ec2, --fast (the setting its model card documents)",
+   "licence_code": "AGPL-3.0-or-later",
+   "licence_weights": "OpenPronounce/wav2vec2-base-phones-en: AGPL-3.0 (model card)",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "not supported",
+    "es": "not supported (English-only model)",
+    "de": "not supported (English-only model)"
+   },
+   "given": "recording + prompt text",
+   "levels": "sound, word, sentence",
+   "score_used": "as OpenPronounce default",
+   "run": "bench.rivals.openpronounce --mode student, 1 torch thread"
+  },
+  "azure": {
+   "label": "Azure Pronunciation Assessment (cached responses)",
+   "category": "commercial, cached responses only",
+   "version": "REST API, region westus; speechocean762 / L2-ARCTIC / EpaDB / OMPAL responses obtained 2026-11 for the scoreboard; Heroico and Speech Accent Archive responses obtained 2026-11-22 (round 19). No request was made in this benchmark.",
+   "licence_code": "commercial service",
+   "licence_weights": "-",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "supported",
+    "es": "supported",
+    "de": "supported, not run (no cached responses for LeaP)"
+   },
+   "given": "recording + prompt text",
+   "levels": "sound (phoneme), word, sentence",
+   "score_used": {
+    "sound": "phoneme AccuracyScore",
+    "word": "word AccuracyScore",
+    "sentence": "PronScore (suite); Accuracy / Fluency / Prosody / PronScore (speechocean762 aspects); AccuracyScore (OMPAL)"
+   }
+  },
+  "lingolix": {
+   "label": "Lingolix pronunciation API (cached responses)",
+   "category": "commercial, cached responses only",
+   "version": "POST /api/pronunciation/v3/check, model_version 2026-11; speechocean762 test responses obtained 2026-11-22. No request was made in this benchmark.",
+   "licence_code": "commercial service",
+   "licence_weights": "-",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "not supported (HTTP 400 'Language zh not supported', 2026-11-22)",
+    "es": "supported, not run",
+    "de": "supported, not run"
+   },
+   "given": "recording + prompt text",
+   "levels": "syllable, word, sentence (no sound level)",
+   "score_used": {
+    "word": "word accuracy",
+    "sentence": "the benchmark adapter's utterance score (overall)",
+    "sentence accuracy": "top-level accuracy"
+   },
+   "heroico": "Heroico / USMA test, 600 items, measured 2026-11-23 (model_version 2026-11); sentence score = `overall`"
+  },
+  "chivox": {
+   "label": "Chivox speech evaluation API (sample)",
+   "category": "commercial, measured on a 299-recording sample per language (free pilot)",
+   "version": "chivox-eval 1.0.0; engines eng.snt.G4.N1.0.13 (English) and chn.snt.G4.A2.0.8 (Mandarin); 2026-11-23",
+   "licence_code": "commercial service",
+   "licence_weights": "-",
+   "languages_of_suite": {
+    "en": "supported, sample of 299 speechocean762 test items",
+    "zh": "supported, sample of 299 OMPAL test items",
+    "es": "not run",
+    "de": "not run"
+   },
+   "given": "recording as 64 kbit/s MP3 (its endpoint accepts only MP3; every other system scored the original audio) + prompt text; documented default settings",
+   "levels": "word, sentence (English sentence engine: no sound scores); Mandarin: character units",
+   "score_used": "bench/third_party/chivox_live.py mapping (results/chivox_harness.md)"
+  },
+  "zipa-alone": {
+   "label": "ZIPA alone (reference: the underlying phone model without Pronunciada)",
+   "category": "reference, not a pronunciation-assessment system",
+   "version": "anyspeech zipa-small-crctc-500k, fp32, the same file Pronunciada loads; recipe bench/eval_zipa_baseline.py ('gop' scoring, as reported in the README and results/zipa_baseline.md)",
+   "licence_code": "recipe Apache-2.0",
+   "licence_weights": "CC BY 4.0",
+   "languages_of_suite": {
+    "en": "scored",
+    "zh": "scored",
+    "es": "scored",
+    "de": "scored"
+   },
+   "given": "recording + Pronunciada's canonical phones for the prompt (first alternative only)",
+   "levels": "sound (mean log-posterior over CTC-aligned frames), word (mean of its sounds), sentence (mean of all sounds; used for every sentence-level test)",
+   "score_used": "recipe unchanged; failures score -60"
+  },
+  "pronunciada-nb8-sym-b128": {
+   "label": "Pronunciada, on-device model (73 MB, candidate)",
+   "category": "open assessment system, candidate (not released)",
+   "version": "main fce7918 with PRONUNCIADA_BACKBONE = nb8-sym-b128 model.onnx (MatMulNBitsQuantizer bits=8, block 128, symmetric; 73,442,981 bytes; sha1 d6987da1e36019767018cc88fb24895be494ed7f; sha256 17be7e281a3e7842e130dbadbf8ae92af2b3d2669880a13b2f17d95cfb61d3e0)",
+   "licence_code": "Apache-2.0",
+   "licence_weights": "derived from ZIPA-small, CC BY 4.0",
+   "languages_of_suite": {
+    "en": "supported",
+    "zh": "supported",
+    "es": "supported",
+    "de": "supported"
+   },
+   "given": "as fp32",
+   "levels": "sound, word, sentence",
+   "score_used": "as fp32",
+   "run": "bench.learnerbench.run_pronunciada --variant fp32 --backbone <file> --name pronunciada-nb8-sym-b128"
+  }
+ },
+ "coverage": {
+  "_": "supported / not supported per language of the suite (en, zh, es, de); 'not run' = supported but no cached responses",
+  "pronunciada-fp32": "en zh es de",
+  "pronunciada-int8": "en zh es de",
+  "openpronounce-1.1.0": "en es de (es, de marked experimental); zh not supported",
+  "openpronounce-1.1.0-student": "en only",
+  "azure": "en zh es de (de not run)",
+  "lingolix": "en es de (es: Heroico only; de not run); zh not supported",
+  "chivox": "en zh (299-item samples); es, de not run",
+  "zipa-alone": "en zh es de (reference)",
+  "pronunciada-nb8-sym-b128": "en zh es de"
+ }
+}

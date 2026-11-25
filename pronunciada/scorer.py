@@ -51,10 +51,17 @@ class Scorer:
         self.strictness = float(strictness)
         # frontend=False (pronunciada.core.score_phones): no text front-end is loaded; score() then
         # takes a ready Reference only
+        self._g2p_error: ImportError | None = None
         if frontend:
             from .text import get_g2p
 
-            self.g2p = get_g2p(self.lang)
+            try:
+                self.g2p = get_g2p(self.lang)
+            except ImportError as e:
+                # layer 2 (the language's dictionary extra) is not installed: scoring a Reference
+                # still works; text raises this error, which names the extra (docs/TEXT_LAYERS.md)
+                self.g2p = None
+                self._g2p_error = e
         else:
             self.g2p = None
         self.adapter = Adapter.load(self.lang)
@@ -264,6 +271,8 @@ class Scorer:
             if text is None or not str(text).strip():
                 raise ValueError("text is empty")
             if self.g2p is None:
+                if self._g2p_error is not None:
+                    raise ImportError(str(self._g2p_error)) from self._g2p_error
                 raise ValueError("this Scorer has no text front-end (frontend=False): pass a Reference")
             t = time.perf_counter()
             ref = self.g2p(str(text))

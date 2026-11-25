@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tarfile
 import io
 from pathlib import Path
@@ -28,7 +29,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 LANGS = ("en", "de", "es", "fr", "it", "pt", "ru", "ja", "ko", "zh")
 SECRET_VARS = ("AZURE_SPEECH_KEY", "AZURE_SPEECH_REGION", "AZURE_SPEECH_ENDPOINT", "LINGOLIX_API_KEY")
-THREAD_VARS = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")
+SECRET_PATTERN = re.compile(r"(_API_KEY|_SPEECH_KEY|_SECRET|_SECRET_KEY|_TOKEN|_PASSWORD)$")   # any other service
+THREAD_VARS =("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "VECLIB_MAXIMUM_THREADS")
 MODEL = "zipa-small-crctc-500k"
 PRECISION_FILES = {"fp32": "model.onnx", "fp16": "model.fp16.onnx", "int8": "model.int8.onnx"}
 CLIPS_FILE = Path(__file__).resolve().parent / "clips.json"
@@ -48,7 +50,20 @@ def model_dir() -> Path:
 
 
 def default_backbone(precision: str) -> Path:
-    return model_dir() / PRECISION_FILES[precision]
+    """The plain downloaded backbone file of a precision (what candidates are built from and the int8
+    suite runs as PRONUNCIADA_BACKBONE). The model cache keeps one all-outputs file per precision and
+    removes the download; the package's own loader restores the download from it, byte for byte with
+    its SHA-256 checked (no network), and PRONUNCIADA_KEEP_DOWNLOAD=1 (set for this process and every
+    child) keeps it in place while the harness uses it."""
+    os.environ["PRONUNCIADA_KEEP_DOWNLOAD"] = "1"
+    plain = model_dir() / PRECISION_FILES[precision]
+    if plain.exists():
+        return plain
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))       # the build scripts run as plain scripts in the tools venv
+    from pronunciada.acoustic import ensure_model_file
+
+    return Path(ensure_model_file(MODEL, PRECISION_FILES[precision], str(cache_root())))
 
 
 # ----------------------------------------------------------------------------- specs
@@ -103,10 +118,11 @@ def override_env(spec: dict, suite: bool = False) -> dict:
 
 def child_env(spec: dict, tree: Path, threads: int | None = None, suite: bool = False, extra: dict | None = None) -> dict:
     env = {k: v for k, v in os.environ.items()
-           if k not in SECRET_VARS and not k.startswith(("PRONUNCIADA_BACKBONE", "PRONUNCIADA_ADAPTER_DIR",
-                                                          "PRONUNCIADA_ORT_OPTIONS"))}
+           if k not in SECRET_VARS and not SECRET_PATTERN.search(k)
+           and not k.startswith(("PRONUNCIADA_BACKBONE", "PRONUNCIADA_ADAPTER_DIR", "PRONUNCIADA_ORT_OPTIONS"))}
     env["PYTHONPATH"] = str(tree)
     env["PYTHONHASHSEED"] = "0"
+    env["PRONUNCIADA_KEEP_DOWNLOAD"] = "1"      # the plain backbone files stay usable (default_backbone)
     if threads is not None:
         for v in THREAD_VARS:
             env[v] = str(threads)

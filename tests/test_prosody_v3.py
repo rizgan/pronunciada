@@ -107,11 +107,9 @@ def test_selectable_tone_model_through_scorer(tmp_path, monkeypatch, stem):
     import os
     from pathlib import Path
 
-    ZIPA = Path(os.environ.get("PRONUNCIADA_CACHE", os.path.expanduser("~/.cache/pronunciada"))) / "models" / \
-        "zipa-small-crctc-500k" / "model.onnx"
 
     path_stem = model_stem(stem)
-    if not ZIPA.exists() or shutil.which("say") is None:
+    if not _model_cached() or shutil.which("say") is None:
         pytest.skip("needs the cached ZIPA model and macOS `say`")
     out = tmp_path / "say.wav"
     text = "今天天气很好，我们一起去公园散步吧。"
@@ -132,3 +130,9 @@ def test_selectable_tone_model_through_scorer(tmp_path, monkeypatch, stem):
     tp = [s.tone_prob for w in res.words for s in w.syllables if s.tone_prob is not None]
     assert len(tp) >= 10 and all(0 <= p <= 1 for p in tp)
     assert all(0 <= w.prob <= 1 for w in res.words)
+
+
+def _model_cached():
+    from pronunciada.acoustic import model_cached
+
+    return model_cached()

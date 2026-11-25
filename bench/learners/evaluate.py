@@ -42,6 +42,37 @@ PRE-SPECIFIED (written down before any system was run on the suite):
                    learner test; Speech Accent Archive learners: Spearman of the score with English
                    onset age (expected negative) and with log(1 + years of residence) (expected positive).
   intervals        95 % percentile bootstrap, 2,000 replicates, speakers resampled.
+
+ADDED 2026-11-23, PRE-SPECIFIED before any system was run on LeaP (bench/learners/leap.py). Nothing above
+is changed; the round-19 tests, LS and LS-NL keep their definitions and their items.
+  suite file       $PRONUNCIADA_CACHE/data/learners/suite4_test.jsonl = every line of suite_test.jsonl plus
+                   the LeaP test selections (leap-de, leap-en); python -m bench.learners.suite --four.
+  de  LeaP German read stories (B, C): prompt-matched C (= AUC) of the sentence score, native (7
+         speakers) vs learner (46 speakers) recordings; pairs counted only within the same story
+         sentence; speakers resampled. Primary German metric (native-vs-learner only: weaker evidence
+         than expert scores, as for Spanish).
+  per-prompt paired version (de, and en LeaP): the unweighted mean over prompts of the AUC computed
+         within each prompt (prompts with no native or no learner reading skipped), same bootstrap.
+  en  LeaP English read story (A): the same two metrics, native (4) vs learner (46). A secondary English
+         native-vs-learner test; it does not replace Speech Accent Archive in LS-NL.
+  LeaP secondary (both languages): speaker-level AUC; -duration baseline; per story (de: B and C);
+         only items read exactly as printed (labels.read_deviations == 0, the corpus' word tier).
+  LeaP proficiency (pre-declared secondary; the corpus has no proficiency rating, only group codes and
+         age of onset): among learners, prompt-matched C of "superlearner" (group sl, written s1; the
+         corpus' "very advanced learner") vs all other learners, expected > 0.5; Spearman of each
+         learner's mean score with labels.age_of_onset, expected negative; later vs first reading of
+         the same speaker on the same sentences (prepost.jsonl: e2 vs e1, c2 / c3 vs c1): mean over
+         speakers of the mean per-sentence difference later - first, reported with a speaker bootstrap,
+         no expected sign (the courses taught prosody).
+  LS4              = unweighted mean over en, zh, es, de of the primary C (en speechocean762, zh OMPAL,
+                   es Heroico USMA, de LeaP German); speakers resampled independently within each
+                   language, both systems on the same replicates, two-sided p as for LS.
+  LS-NL4           = mean of the native-vs-learner AUC over en (Speech Accent Archive <= 30 s), es (Heroico
+                   USMA), zh (OMPAL test) and de (LeaP German).
+  partial coverage A system that does not support one of the four languages gets no LS4. It is compared
+                   with Pronunciada on the same formula restricted to the languages it supports (for
+                   example LS-en,es,de), labelled with that language set; a language is never filled in
+                   from a workaround. Failures score the system's lowest value, as above.
 """
 from __future__ import annotations
 
@@ -75,8 +106,13 @@ AZURE_SEND = ("heroico", "saa")
 LOCALE = {"en": "en-US", "es": "es-MX", "zh": "zh-TW"}
 
 
+def suite_file() -> str:
+    """suite_test.jsonl (round 19) unless PRONUNCIADA_LEARNER_SUITE names another file in data/learners/."""
+    return os.environ.get("PRONUNCIADA_LEARNER_SUITE", "suite_test.jsonl")
+
+
 def suite() -> list[dict]:
-    return list(read_jsonl(root() / "suite_test.jsonl"))
+    return list(read_jsonl(root() / suite_file()))
 
 
 def work_dir() -> Path:
@@ -84,6 +120,19 @@ def work_dir() -> Path:
 
 
 # ============================================================================ ours
+
+def variant() -> str:
+    """'' for the default (fp32, shipped backbone); else e.g. 'int8' or 'backbone-<sha256[:12]>'.
+    PRONUNCIADA_LEARNER_PRECISION selects the shipped precision; PRONUNCIADA_BACKBONE a backbone file."""
+    v = os.environ.get("PRONUNCIADA_LEARNER_PRECISION", "fp32")
+    tag = "" if v == "fp32" else v
+    b = os.environ.get("PRONUNCIADA_BACKBONE")
+    if b:
+        from bench.learners import sha256 as _sha
+
+        tag = (tag + "-" if tag else "") + "backbone-" + _sha(Path(b))[:12]
+    return tag
+
 
 def fingerprint() -> str:
     h = hashlib.sha256()
@@ -105,7 +154,7 @@ def _init(lang: str) -> None:
     import pronunciada
 
     assert Path(pronunciada.__file__).resolve().is_relative_to(REPO), pronunciada.__file__
-    _SC = pronunciada.Scorer(lang, threads=1)
+    _SC = pronunciada.Scorer(lang, threads=1, precision=os.environ.get("PRONUNCIADA_LEARNER_PRECISION", "fp32"))
 
 
 def _score_one(rec: dict) -> tuple[str, dict]:
@@ -130,7 +179,7 @@ def run_ours(workers: int) -> None:
 
     assert Path(pronunciada.__file__).resolve().is_relative_to(REPO), \
         f"pronunciada imported from {pronunciada.__file__}; run from the repo root with python -m"
-    fp = fingerprint()
+    fp = fingerprint() + (f"-{variant()}" if variant() else "")
     d = work_dir() / "ours" / fp
     d.mkdir(parents=True, exist_ok=True)
     recs = suite()
@@ -150,9 +199,11 @@ def run_ours(workers: int) -> None:
                 if (k + 1) % 250 == 0:
                     print(f"  {lang}: {k + 1}/{len(rs)} ({time.time() - t0:.0f} s)", flush=True)
         print(f"  {lang}: {len(rs)} scored ({time.time() - t0:.0f} s)", flush=True)
-    meta = {"fingerprint": fp, "version": pronunciada.__version__, "time": time.strftime("%Y-%m-%dT%H:%M:%S")}
+    meta = {"fingerprint": fp, "version": pronunciada.__version__, "time": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "variant": variant(), "suite": suite_file()}
     (d / "_meta.json").write_text(json.dumps(meta))
-    (work_dir() / "ours" / "latest.json").write_text(json.dumps(meta))
+    if not variant() and suite_file() == "suite_test.jsonl":
+        (work_dir() / "ours" / "latest.json").write_text(json.dumps(meta))
 
 
 def ours_scores(recs: list[dict]) -> tuple[dict, dict]:
@@ -467,11 +518,71 @@ def build_tests(recs: list[dict]) -> dict[str, Test]:
     T["zh/ompal_nl"] = Test("OMPAL test: native vs learner, prompt-matched", "zh", oa,
                             [1.0 if r["labels"]["native"] else 0.0 for r in oa], "native_vs_learner",
                             strata=[r["text"] for r in oa], evidence="native vs learner")
+    # LeaP (added 2026-11-23; see the docstring)
+    for lang, corpus in (("de", "leap-de"), ("en", "leap-en")):
+        lp = by.get(corpus) or []
+        if not lp:
+            continue
+        nl = lambda rs: [1.0 if r["labels"]["native"] else 0.0 for r in rs]  # noqa: E731
+        pid = lambda rs: [r["labels"]["prompt_id"] for r in rs]  # noqa: E731
+        T[f"{lang}/leap"] = Test(f"LeaP {lang} read stories: native vs learner, prompt-matched", lang, lp, nl(lp),
+                                 "native_vs_learner", strata=pid(lp), evidence="native vs learner")
+        ex = [r for r in lp if r["labels"].get("read_deviations") == 0]
+        T[f"{lang}/leap_exact"] = Test(f"LeaP {lang}: items read exactly as printed", lang, ex, nl(ex),
+                                       "native_vs_learner", strata=pid(ex), evidence="native vs learner")
+        for st in sorted({r["labels"]["story"] for r in lp}):
+            ss = [r for r in lp if r["labels"]["story"] == st]
+            if lang == "de":
+                T[f"de/leap_story{st}"] = Test(f"LeaP de story {st} only", lang, ss, nl(ss), "native_vs_learner",
+                                               strata=pid(ss), evidence="native vs learner")
+        le = [r for r in lp if not r["labels"]["native"]]
+        T[f"{lang}/leap_superlearner"] = Test(f"LeaP {lang} learners: superlearner vs other learners, prompt-matched",
+                                              lang, le, [1.0 if r["labels"].get("superlearner") else 0.0 for r in le],
+                                              "proficiency", strata=pid(le), evidence="corpus group code")
+        T[f"{lang}/leap_onset"] = Test(f"LeaP {lang} learners: speaker mean score vs age of onset", lang, le,
+                                       np.zeros(len(le)), "proxy_onset", evidence="corpus metadata")
     return T
+
+
+def prompt_macro_auc(t, s, idx):
+    """Unweighted mean over prompts of the within-prompt AUC (prompts lacking either group skipped)."""
+    idx = np.arange(len(t.h)) if idx is None else idx
+    s = np.asarray(s, float)[idx]
+    h, st = t.h[idx], t.strata[idx]
+    vals = []
+    for p in np.unique(st):
+        m = st == p
+        if len(np.unique(h[m])) == 2:
+            vals.append(cindex(h[m], s[m]))
+    return float(np.mean(vals)) if vals else float("nan")
+
+
+def speaker_spearman(values_by_item):
+    """Spearman over speakers of the speaker's mean score with a per-speaker value (resampled copies kept)."""
+    vals = np.asarray(values_by_item, float)
+
+    def f(t, s, idx):
+        if idx is None:
+            idx = np.arange(len(t.h))
+            _, copy = np.unique(t.spk, return_inverse=True)
+        else:
+            copy = t.last_copy
+        n = copy.max() + 1
+        ss = np.asarray(s, float)[idx]
+        mean = np.bincount(copy, weights=ss, minlength=n) / np.bincount(copy, minlength=n)
+        v = np.full(n, np.nan)
+        v[copy] = vals[idx]
+        ok = np.isfinite(v)
+        return float(stats.spearmanr(mean[ok], v[ok]).statistic) if ok.sum() > 2 else float("nan")
+
+    return f
 
 
 PRIMARY = {"en": "en/speechocean762", "zh": "zh/ompal", "es": "es/heroico"}
 NL = {"en": "en/saa", "zh": "zh/ompal_nl", "es": "es/heroico"}
+# added 2026-11-23
+PRIMARY4 = {**PRIMARY, "de": "de/leap"}
+NL4 = {**NL, "de": "de/leap"}
 
 
 def summary(T: dict, picks: dict, a: dict, b: dict, seed: int = 7) -> dict:
@@ -503,6 +614,8 @@ def report() -> dict:
     res = {"pronunciada": meta, "tests": {}, "n_boot": N_BOOT}
     a_s, b_s = {}, {}
     for key, t in T.items():
+        if t.kind == "proxy_onset":       # LeaP secondary, reported by bench.learnerbench
+            continue
         ids = [r["id"] for r in t.recs]
         miss_o = [i for i in ids if i not in ours]
         miss_a = [i for i in ids if i not in az]

@@ -22,8 +22,12 @@ def _model_dir():
 
 
 def model_available() -> bool:
+    """The fp32 backbone is in the cache: the download, or the one all-outputs file that replaces it
+    (pronunciada.acoustic.backbone_model_file) with its sidecar."""
     d = _model_dir()
-    return all(os.path.exists(os.path.join(d, f)) for f in ("model.onnx", "tokens.txt"))
+    union = os.path.join(d, "model.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.onnx")
+    have = os.path.exists(os.path.join(d, "model.onnx")) or (os.path.exists(union) and os.path.exists(union + ".json"))
+    return have and os.path.exists(os.path.join(d, "tokens.txt"))
 
 
 def pytest_collection_modifyitems(config, items):

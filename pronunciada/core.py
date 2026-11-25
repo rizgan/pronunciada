@@ -41,7 +41,7 @@ the normalisation rules is docs/PHONES.md:
 `words[i].alternatives` is a list of readings, each a list of syllables in the format above. The
 round-20 word-level pass (pronunciada.r20; on by default for Spanish number tokens) re-scores a word
 whose probability is below 0.9 against each reading and keeps the best word-level values. The
-readings come from the front-end (num2words for the spelled-out numbers), so the core takes them as
+readings come from the front-end (pronunciada.text.numbers spells the numbers), so the core takes them as
 data: `phones_for` fills them exactly as the text path would compute them, and a target without them
 gives that word no second pass (the first-pass values are returned, a documented difference, not an
 approximation of it).
@@ -64,8 +64,22 @@ FORMAT = "pronunciada-target"
 VERSION = 1
 SAMPLE_RATE = 16000
 
-__all__ = ["score_phones", "phones_for", "target_from_reference", "reference_from_target",
-           "get_scorer", "FORMAT", "VERSION", "SAMPLE_RATE"]
+__all__ = ["score_phones", "phones_for", "phones_from_kana", "phones_from_pinyin", "target_from_reference",
+           "reference_from_target", "get_scorer", "FORMAT", "VERSION", "SAMPLE_RATE"]
+
+
+def phones_from_kana(reading, text=None, *, style="pron", devoicing="auto") -> dict:
+    """Japanese target from a kana reading, by rules (layer 1, no dictionary): pronunciada.reading.ja."""
+    from .reading import phones_from_kana as f
+
+    return f(reading, text, style=style, devoicing=devoicing)
+
+
+def phones_from_pinyin(reading, text=None, *, sandhi=True) -> dict:
+    """Mandarin target from pinyin, by rules (layer 1, no dictionary): pronunciada.reading.zh."""
+    from .reading import phones_from_pinyin as f
+
+    return f(reading, text, sandhi=sandhi)
 
 
 # ----------------------------------------------------------------------------- target <-> Reference
@@ -171,8 +185,8 @@ def reference_from_target(target, lang: str | None = None) -> Reference:
 def phones_for(text: str, lang: str) -> dict:
     """The target of `text` from today's text front-end (pronunciada.text), including the round-20
     candidate readings of each word that the text path would compute (pronunciada.r20.text_fragments,
-    for the languages and fixes enabled now). Runs the front-end (and num2words when the prompt has
-    digits); not part of the on-device core."""
+    for the languages and fixes enabled now). Runs the layer-2 text front-end (lexicons, dictionaries) and the
+    number speller; not part of the on-device core. See docs/TEXT_LAYERS.md."""
     from . import r20 as R20
     from .text import get_g2p, normalize_lang
 

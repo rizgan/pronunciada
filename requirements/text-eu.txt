@@ -1,0 +1,7 @@
+# Runtime packages used by the European text front-ends (pronunciada/text/{en,de,fr,es,it,pt,ru}.py):
+# none. They need only the Python standard library + the core pronunciada deps; the lexicons are
+# bundled data (pronunciada/data/lex/), and digits are read out by pronunciada/text/numbers.py
+# (Apache-2.0; the LGPL package num2words is no longer used).
+#
+# Offline lexicon building (python -m pronunciada.text._eu_build) needs only the standard library
+# and the downloaded source files listed in docs/text_eu_notes.md. espeak-ng was not used.

@@ -19,5 +19,17 @@
  "adapters-fp16": {"precision": "fp32", "adapter_dir": "{C}/adapters-fp16/eval"},
  "adapters-int8": {"precision": "fp32", "adapter_dir": "{C}/adapters-int8/eval"},
  "adapters-lowrank32": {"precision": "fp32", "adapter_dir": "{C}/adapters-lowrank32/eval"},
- "adapters-lowrank16": {"precision": "fp32", "adapter_dir": "{C}/adapters-lowrank16/eval"}
+ "adapters-lowrank16": {"precision": "fp32", "adapter_dir": "{C}/adapters-lowrank16/eval"},
+ "nb8-sym-b32": {"precision": "fp32", "backbone": "{C}/nb8-sym-b32/model.onnx"},
+ "nb8-asym-b32": {"precision": "fp32", "backbone": "{C}/nb8-asym-b32/model.onnx"},
+ "nb8-sym-b128": {"precision": "fp32", "backbone": "{C}/nb8-sym-b128/model.onnx"},
+ "dq8-sym-ch": {"precision": "fp32", "backbone": "{C}/dq8-sym-ch/model.onnx"},
+ "dq8-sym-ch-noqdq": {"precision": "fp32", "backbone": "{C}/dq8-sym-ch/model.onnx", "ort_options": {"config": {"session.disable_quant_qdq": "1"}, "sessions": ["backbone"]}},
+ "mix-A": {"precision": "fp32", "backbone": "{C}/mix-A/model.onnx"},
+ "mix-B": {"precision": "fp32", "backbone": "{C}/mix-B/model.onnx"},
+ "mix-C": {"precision": "fp32", "backbone": "{C}/mix-C/model.onnx"},
+ "nb4-sym-b32": {"precision": "fp32", "backbone": "{C}/nb4-sym-b32/model.onnx"},
+ "s8-minmax": {"precision": "fp32", "backbone": "{C}/s8-minmax/model.onnx"},
+ "int8-shipped-vs-fp32": {"precision": "fp32", "backbone": "{M}/model.int8.onnx"},
+ "fp32-file": {"precision": "fp32", "backbone": "{M}/model.onnx"}
 }

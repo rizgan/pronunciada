@@ -29,12 +29,12 @@
    "before": {
     "clips": 250,
     "share_clips_with_pron_tip": 0.716,
-    "pron_tips_per_clip": 1.144
+    "pron_tips_per_clip": 1.136
    },
    "after": {
     "clips": 250,
-    "share_clips_with_pron_tip": 0.228,
-    "pron_tips_per_clip": 0.264
+    "share_clips_with_pron_tip": 0.224,
+    "pron_tips_per_clip": 0.26
    }
   },
   "es": {

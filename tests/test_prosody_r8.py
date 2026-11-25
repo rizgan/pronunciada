@@ -22,8 +22,6 @@ def model_stem(name):
         return str(RETIRED / name)
     pytest.skip(f"{name} neither in the package nor in {RETIRED}")
 
-ZIPA = Path(os.environ.get("PRONUNCIADA_CACHE", os.path.expanduser("~/.cache/pronunciada"))) / "models" / \
-    "zipa-small-crctc-500k" / "model.onnx"
 
 CASES = [  # env var, model stem, language, `say` voice, text
     ("PRONUNCIADA_STRESS_MODEL", "stress_v3", "en", "Samantha",
@@ -44,7 +42,7 @@ def test_defaults_unchanged():
 @pytest.mark.parametrize("env,stem,lang,voice,text", CASES)
 def test_round8_candidate_through_scorer(tmp_path, monkeypatch, env, stem, lang, voice, text):
     path_stem = model_stem(stem)
-    if not ZIPA.exists() or shutil.which("say") is None:
+    if not _model_cached() or shutil.which("say") is None:
         pytest.skip("needs the cached ZIPA model and macOS `say`")
     out = tmp_path / "say.wav"
     r = subprocess.run(["say", "-v", voice, "-o", str(out), "--data-format=LEI16@16000", text], capture_output=True)
@@ -68,3 +66,9 @@ def test_round8_candidate_through_scorer(tmp_path, monkeypatch, env, stem, lang,
     vals = [s.stress_prob for w in res.words for s in w.syllables if s.stress_prob is not None]
     assert vals and all(0 <= v <= 1 for v in vals)
     assert all(0 <= w.prob <= 1 for w in res.words)
+
+
+def _model_cached():
+    from pronunciada.acoustic import model_cached
+
+    return model_cached()

@@ -76,16 +76,16 @@ def decide(base_rows: list[dict], cand_rows: list[dict], paired: dict | None = N
     B = {r["key"]: r for r in base_rows}
     C = {r["key"]: r for r in cand_rows}
     fails, moved, notes = [], [], []
-    n_paired = n_selfcheck_bad = 0
+    n_paired = n_selfcheck_bad = n_p = n_sig = n_sig_worse = 0
     for key, b in B.items():
         c = C.get(key)
         if c is None:
-            fails.append({"rule": "missing row", "key": key, "text": f"{key}: row missing from the candidate"})
+            fails.append({"rule": "missing row", "key": key, "budget": True, "text": f"{key}: row missing from the candidate"})
             continue
         vb, vc = b["value"], c["value"]
         if vb is None or vc is None or (isinstance(vb, float) and math.isnan(vb)) or (isinstance(vc, float) and math.isnan(vc)):
             if not (vb is None and vc is None) and not (_nan(vb) and _nan(vc)):
-                fails.append({"rule": "missing value", "key": key, "text": f"{key}: value {vb} -> {vc}"})
+                fails.append({"rule": "missing value", "key": key, "budget": True, "text": f"{key}: value {vb} -> {vc}"})
             continue
         dv = float(vc) - float(vb)
         hib = b["hib"]
@@ -102,40 +102,51 @@ def decide(base_rows: list[dict], cand_rows: list[dict], paired: dict | None = N
             n_paired += 1
         row_fail = []
         if b["kind"] == "pcc" and loss > PCC_TOL:
-            row_fail.append(f"speechocean762 Pearson drops by {loss:.4f} (> {PCC_TOL})")
+            row_fail.append((f"speechocean762 Pearson drops by {loss:.4f} (> {PCC_TOL})", True))
         if b["kind"] == "detection_auc" and loss > AUC_TOL:
-            row_fail.append(f"detection AUC drops by {loss:.4f} (> {AUC_TOL})")
+            row_fail.append((f"detection AUC drops by {loss:.4f} (> {AUC_TOL})", True))
         if b["kind"] == "native_fa" and loss > FA_TOL:
-            row_fail.append(f"native false alarms rise by {100 * loss:.2f} points (> {100 * FA_TOL:.1f})")
+            row_fail.append((f"native false alarms rise by {100 * loss:.2f} points (> {100 * FA_TOL:.1f})", True))
         if b["kind"] == "native_accept" and loss > FA_TOL:
-            row_fail.append(f"native acceptance falls by {100 * loss:.2f} points (> {100 * FA_TOL:.1f})")
+            row_fail.append((f"native acceptance falls by {100 * loss:.2f} points (> {100 * FA_TOL:.1f})", True))
         if b.get("tally"):
             cb, cc = b["cat"], c["cat"]
             down = ORDER.index(cc) > ORDER.index(cb) if class_rule == "strict" else COARSE[cc] > COARSE[cb]
             if down:
-                row_fail.append(f"Azure tally class {cb} -> {cc}")
+                row_fail.append((f"Azure tally class {cb} -> {cc}", True))
         if selfcheck_ok and worse and pr["p"] < ALPHA:
-            row_fail.append(f"significantly worse than the baseline (paired, p = {pr['p']:.3g}, "
-                            f"delta {pr['delta']:+.4f} [{pr['ci'][0]:+.4f}, {pr['ci'][1]:+.4f}])")
+            row_fail.append((f"significantly worse than the baseline (paired, p = {pr['p']:.3g}, "
+                             f"delta {pr['delta']:+.4f} [{pr['ci'][0]:+.4f}, {pr['ci'][1]:+.4f}])", False))
         if not selfcheck_ok and worse and b["kind"] in ("rate", "other"):
             if b["area"] in PROSE_AREAS:
                 notes.append(f"{key}: worse by {loss:.4g} (figure quoted in running text, no per-clip test; not gating)")
             else:
-                row_fail.append(f"worse by {loss:.4g} and no paired test is available for this row")
+                row_fail.append((f"worse by {loss:.4g} and no paired test is available for this row", False))
         if dv != 0 or (b.get("cat") != c.get("cat")):
             moved.append({"key": key, "lang": b["lang"], "kind": b["kind"], "base": vb, "cand": vc, "delta": dv,
                           "worse": worse, "cat_base": b.get("cat"), "cat_cand": c.get("cat"),
                           "p": pr["p"] if selfcheck_ok else None, "ci": pr["ci"] if selfcheck_ok else None,
-                          "fails": row_fail})
-        for t in row_fail:
-            fails.append({"rule": t.split(" (")[0], "key": key, "lang": b["lang"], "text": f"{key}: {t}"})
+                          "fails": [t for t, _ in row_fail], "budget_fails": [t for t, bud in row_fail if bud]})
+        if selfcheck_ok and np.isfinite(pr["p"]):
+            n_p += 1
+            n_sig += pr["p"] < ALPHA
+            n_sig_worse += worse and pr["p"] < ALPHA
+        for t, bud in row_fail:
+            fails.append({"rule": t.split(" (")[0], "key": key, "lang": b["lang"], "budget": bud, "text": f"{key}: {t}"})
     extra = sorted(set(C) - set(B))
     if extra:
         notes.append(f"{len(extra)} rows only in the candidate: {extra[:5]}")
     for area, err in (paired_errors or {}).items():
         notes.append(f"paired tests of {area} not computed ({err}); its rows use the value rules")
     langs_failed = sorted({f.get("lang") for f in fails if f.get("lang")})
-    return {"verdict": "FAIL" if fails else "PASS", "n_rows": len(B), "n_rows_paired": n_paired,
+    bfails = [f for f in fails if f.get("budget")]
+    listed = [f for f in fails if not f.get("budget")]
+    chance = {"rows_with_paired_p": n_p, "expected_p_below_0.05_by_chance": round(ALPHA * n_p, 1),
+              "observed_p_below_0.05": int(n_sig), "expected_worse_and_p_below_0.05": round(ALPHA / 2 * n_p, 1),
+              "observed_worse_and_p_below_0.05": int(n_sig_worse)}
+    return {"verdict": "FAIL" if fails else "PASS", "verdict_budget": "FAIL" if bfails else "PASS",
+            "budget_fails": bfails, "budget_listed": listed, "chance": chance,
+            "n_rows": len(B), "n_rows_paired": n_paired,
             "n_selfcheck_mismatch": n_selfcheck_bad, "n_moved": len(moved), "fails": fails, "moved": moved,
             "notes": notes, "languages_failed": langs_failed, "class_rule": class_rule}
 
@@ -315,7 +326,8 @@ def compare_runs(base: Path, cand: Path, class_rule: str = "strict", tables_base
         d = decide(rb, rc, paired, class_rule, errors)
         d["by_identity"] = False
         out.update(d)
-        out["summary"] = f"{d['verdict']}: {len(d['fails'])} failing rows, {d['n_moved']} rows moved, " \
+        out["summary"] = f"strict {d['verdict']} / budget {d['verdict_budget']}: {len(d['fails'])} failing checks " \
+                         f"({len(d['budget_fails'])} under the budget rule), {d['n_moved']} rows moved, " \
                          f"{d['n_rows_paired']} of {d['n_rows']} rows with a paired test"
     out["analysis_s"] = round(time.time() - t0)
     return out
@@ -324,10 +336,18 @@ def compare_runs(base: Path, cand: Path, class_rule: str = "strict", tables_base
 def print_decision(r: dict, file=sys.stdout) -> None:
     w = lambda s="": print(s, file=file)  # noqa: E731
     w(f"== gate: {r['summary']}")
+    if "verdict_budget" in r:
+        w(f"== strict rule: {r['verdict']} ({len(r['fails'])} failing checks); budget rule: {r['verdict_budget']} "
+          f"({len(r.get('budget_fails', []))} failing checks)")
+        c = r.get("chance", {})
+        if c:
+            w(f"== chance: {c['rows_with_paired_p']} rows with a paired p; expected p < 0.05 by chance "
+              f"{c['expected_p_below_0.05_by_chance']}, observed {c['observed_p_below_0.05']}; worse and p < 0.05: "
+              f"expected {c['expected_worse_and_p_below_0.05']}, observed {c['observed_worse_and_p_below_0.05']}")
     if r.get("fails"):
-        w(f"-- failing rows ({len(r['fails'])}):")
+        w(f"-- failing checks ({len(r['fails'])}; [budget] = fails under the budget rule too, [listed] = strict only):")
         for f in r["fails"]:
-            w(f"   FAIL {f['text']}")
+            w(f"   FAIL {'[budget]' if f.get('budget') else '[listed]'} {f['text']}")
     w(f"-- every row that moved ({r['n_moved']}), candidate - baseline:")
     for m in sorted(r["moved"], key=lambda m: (bool(not m["fails"]), m["key"])):
         p = f" p={m['p']:.3g}" if m.get("p") is not None else " (no paired test)"

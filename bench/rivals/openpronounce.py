@@ -43,8 +43,9 @@ VERSION = "1.1.0"
 REV = "bd51333cebb9e7eb791bce45b710e520ca97e690"
 STUDENT = "OpenPronounce/wav2vec2-base-phones-en"
 CACHE = Path(os.environ.get("PRONUNCIADA_CACHE") or Path.home() / ".cache" / "pronunciada")
-WORK = CACHE / "round19" / "rivals"
-VENV_PY = WORK / "venv" / "bin" / "python"
+# OPENPRONOUNCE_WORK / OPENPRONOUNCE_VENV_PY: another work folder (raw outputs, HF_HOME) and venv
+WORK = Path(os.environ.get("OPENPRONOUNCE_WORK") or CACHE / "round19" / "rivals")
+VENV_PY = Path(os.environ.get("OPENPRONOUNCE_VENV_PY") or WORK / "venv" / "bin" / "python")
 RAW = WORK / "raw"
 LANGS = ("en", "fr", "es", "de", "it", "pt", "nl")
 MODES = ("default", "fast", "student")
@@ -185,8 +186,33 @@ def lingolix_tasks() -> dict[str, list[dict]]:
     return out
 
 
+LEARNER_CORPORA = ("saa", "heroico", "leap-de", "leap-en", "leap-de-prepost", "leap-en-prepost")
+
+
+def learner_tasks() -> dict[str, list[dict]]:
+    """The learner-suite corpora (bench.learners, suite4_test.jsonl) that are not scoreboard datasets."""
+    from bench.learners import read_jsonl, root
+
+    out = {c: [] for c in LEARNER_CORPORA}
+    recs = list(read_jsonl(root() / "suite4_test.jsonl"))
+    for c in ("leap-de", "leap-en"):
+        if (root(c) / "prepost.jsonl").exists():
+            recs += [{**r, "labels": {**r["labels"], "corpus": f"{c}-prepost"}} for r in read_jsonl(root(c) / "prepost.jsonl")]
+    for r in recs:
+        c = r["labels"]["corpus"]
+        if c in out:
+            out[c].append({"dataset": c, "id": r["id"], "lang": r["lang"], "audio": r["audio"], "text": r["text"],
+                           "dur": r["dur"]})
+    return out
+
+
 def all_tasks(datasets: list[str]) -> dict[str, list[dict]]:
     out = {}
+    if any(d in LEARNER_CORPORA for d in datasets):
+        out.update({k: v for k, v in learner_tasks().items() if k in datasets})
+        datasets = [d for d in datasets if d not in LEARNER_CORPORA]
+        if not datasets:
+            return out
     if any(not d.startswith("lingolix") for d in datasets):
         from bench.eval_zipa_baseline import tasks
 

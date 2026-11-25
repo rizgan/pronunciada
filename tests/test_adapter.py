@@ -1,3 +1,4 @@
+import os
 import time
 
 import numpy as np
@@ -80,7 +81,8 @@ def test_shipped_adapters_fast_and_normalised(lang):
     out = a(lp)
     assert np.all(np.isfinite(out))
     np.testing.assert_allclose(np.exp(out).sum(1), 1.0, atol=1e-3)
-    assert best < 3e-3, f"{lang}: {best * 1e3:.2f} ms"
+    limit = 20e-3 if os.environ.get("CI") else 3e-3      # shared CI runners are several times slower than a laptop
+    assert best < limit, f"{lang}: {best * 1e3:.2f} ms"
 
 
 def _time(a, lp):

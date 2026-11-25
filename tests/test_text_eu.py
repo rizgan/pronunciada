@@ -259,7 +259,6 @@ def test_french_elision_and_un():
 
 @pytest.mark.parametrize("lang", LANGS)
 def test_numbers(lang):
-    pytest.importorskip("num2words")
     ref = get_g2p(lang)(NUMBERS[lang])
     ref.validate()
     w = ref.words[find_word(ref, "42")]
@@ -268,7 +267,6 @@ def test_numbers(lang):
 
 
 def test_number_spellings():
-    pytest.importorskip("num2words")
     cases = {"en": ("It was 1984.", "naɪntin"), "de": ("Es war 1984.", "nɔɪntseːnhʊndəʀt"),
              "es": ("Son 3,5 kilos.", "koma"), "fr": ("Il a 80 ans.", "katʁ")}
     for lang, (s, frag) in cases.items():

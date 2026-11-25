@@ -13,6 +13,11 @@ Members (test parts only; their dev parts stay aside):
   saa             en  bench/learners/saa.py (new)
   speechocean762  en  existing test split (bench/data/speechocean762.py), referenced in place
   ompal           zh  existing test half (bench/ompal_build.py), referenced in place
+
+``python -m bench.learners.suite --four`` (added 2026-11-23) writes ``suite4_test.jsonl``: every line of
+the round-19 file above, unchanged, plus the LeaP test selections (bench/learners/leap.py):
+  leap-de         de  LeaP German read stories (new)
+  leap-en         en  LeaP English read story (new, secondary English native-vs-learner test)
 """
 from __future__ import annotations
 
@@ -22,6 +27,7 @@ from bench.data import load as load_bench
 from bench.learners import hours, load, root, write_jsonl
 
 NEW = ("heroico", "saa")
+FOUR = ("leap-de", "leap-en")
 
 
 def existing() -> list[dict]:
@@ -40,15 +46,16 @@ def existing() -> list[dict]:
     return out
 
 
-def build() -> list[dict]:
+def build(four: bool = False) -> list[dict]:
     recs = []
-    for c in NEW:
+    for c in NEW + (FOUR if four else ()):
         for r in load(c, "test"):
             recs.append({**r, "labels": {**r["labels"], "corpus": c}})
     recs += existing()
     ids = [r["id"] for r in recs]
     assert len(ids) == len(set(ids)), "duplicate ids"
-    n = write_jsonl(root() / "suite_test.jsonl", recs)
+    name = "suite4_test" if four else "suite_test"
+    n = write_jsonl(root() / f"{name}.jsonl", recs)
     summ = {}
     for r in recs:
         k = f"{r['labels']['corpus']}/{r['lang']}"
@@ -59,11 +66,13 @@ def build() -> list[dict]:
         s["recs"].append(r)
     table = {k: {"items": v["items"], "learner_items": v["learner_items"], "native_items": v["native_items"],
                  "speakers": len(v["speakers"]), "hours": hours(v["recs"])} for k, v in summ.items()}
-    (root() / "suite_test.summary.json").write_text(json.dumps(table, indent=1))
-    print(f"wrote {n} records -> {root() / 'suite_test.jsonl'}")
+    (root() / f"{name}.summary.json").write_text(json.dumps(table, indent=1))
+    print(f"wrote {n} records -> {root() / (name + '.jsonl')}")
     print(json.dumps(table, indent=1))
     return recs
 
 
 if __name__ == "__main__":
-    build()
+    import sys
+
+    build(four="--four" in sys.argv[1:])

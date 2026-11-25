@@ -2,10 +2,10 @@
  "lang": "ja",
  "data": "FLEURS test, shipped Scorer defaults",
  "n_clips": 400,
- "n_native_judged_sounds": 27429,
- "sound_threshold_5": 0.673367852544246,
- "word_threshold_5": 0.8504939666331254,
- "native_word_accept_0.5": 0.9711504108610218,
+ "n_native_judged_sounds": 27434,
+ "sound_threshold_5": 0.6737731013669922,
+ "word_threshold_5": 0.8558451504631552,
+ "native_word_accept_0.5": 0.971418363701322,
  "sound": {
   "gemination:A>B": {
    "n": 255,
@@ -16,38 +16,38 @@
    "hit5": 0.9926605504587156
   },
   "vowel_length:A>B": {
-   "n": 620,
-   "hit5": 0.9580645161290322
+   "n": 621,
+   "hit5": 0.9581320450885669
   },
   "vowel_length:B>A": {
-   "n": 716,
-   "hit5": 0.9762569832402235
+   "n": 715,
+   "hit5": 0.9776223776223776
   },
   "all": {
    "n": 2136,
-   "hit5": 0.9728464419475655
+   "hit5": 0.973314606741573
   }
  },
  "word": {
   "gemination:A>B": {
    "n": 333,
-   "hit5": 0.33933933933933935
+   "hit5": 0.3483483483483483
   },
   "gemination:B>A": {
    "n": 800,
-   "hit5": 0.77375
+   "hit5": 0.775
   },
   "vowel_length:A>B": {
    "n": 747,
-   "hit5": 0.43775100401606426
+   "hit5": 0.44176706827309237
   },
   "vowel_length:B>A": {
    "n": 800,
-   "hit5": 0.865
+   "hit5": 0.8675
   },
   "all": {
    "n": 2680,
-   "hit5": 0.6533582089552239
+   "hit5": 0.6567164179104478
   }
  }
 }

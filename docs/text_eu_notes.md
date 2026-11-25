@@ -11,8 +11,8 @@ Tests: `tests/test_text_eu.py` (offline).
 1. Tokenize (letters incl. apostrophes / inner hyphens / dotted acronyms, numbers with
    language-specific separators and ordinal suffixes, a few symbols). `RefWord.text` is the token
    exactly as written, `char_span` its offsets.
-2. Expand: abbreviations (small tables), acronyms (letter names), digits (`num2words`,
-   optional; years in en/de; decimals spelled digit by digit in en), symbols (% & $ € ...).
+2. Expand: abbreviations (small tables), acronyms (letter names), digits (`pronunciada/text/numbers.py`,
+   our own speller, string-identical to the num2words package used before; years in en/de; decimals spelled digit by digit in en), symbols (% & $ € ...).
    French and Italian elided clitics (`l'`, `dell'`, `qu'` ...) stay inside the written word.
 3. Pronounce each item: lexicon -> hyphen/apostrophe pieces -> inflection fallback (it, ru, pt)
    -> compound split into lexicon words (de; and number words) -> rules / learned letter-to-sound
@@ -136,8 +136,9 @@ downloaded at runtime. Attribution text: `pronunciada/data/lex/SOURCES-eu.txt`.
 
 CharsiuG2P (MIT code) was inspected: its `dicts/*.tsv` are compilations of ipa-dict (MIT),
 WikiPron (CC BY-SA) and sources of unknown license, so the underlying sources were used directly
-instead. No GPL data or code: espeak-ng was not used at all. `num2words` (LGPL-2.1) is an optional
-runtime import only (numbers are skipped with a warning without it).
+instead. No GPL data or code: espeak-ng was not used at all. Digits are spelled by
+`pronunciada/text/numbers.py` (Apache-2.0, written for this project); the LGPL package num2words
+that earlier versions imported when installed is no longer used.
 
 **License flag for the architect:** it / pt / ru lexicons are Wiktionary-derived CC BY-SA (not GPL,
 but share-alike). If the release must be permissive-only, these three files can be moved to a
@@ -171,7 +172,7 @@ por_latn_bz_broad,rus_cyrl_narrow}.tsv).
   is not modeled); h aspiré list is short; "est"/"un" follow ZIPA's label conventions; numbers
   like "vingt et un" lack the liaison t.
 * All: abbreviations are small tables; only the symbols % & $ € £ + = @ ° § are verbalised; a
-  Russian number is always nominative (num2words), so case agreement after prepositions is wrong.
+  Russian number is always nominative (pronunciada/text/numbers.py), so case agreement after prepositions is wrong.
 
 ## Changes needed in frozen files
 

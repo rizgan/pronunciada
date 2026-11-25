@@ -1,0 +1,2522 @@
+{
+ "n_boot": 10000,
+ "systems": [
+  "pronunciada-fp32",
+  "pronunciada-int8",
+  "openpronounce-1.1.0",
+  "openpronounce-1.1.0-student",
+  "openpronounce-0.4.0",
+  "azure",
+  "lingolix",
+  "zipa-alone",
+  "toneperfect"
+ ],
+ "rows": [
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "sound",
+   "n_items": 32649,
+   "n_speakers": 125,
+   "note": "expert phone accuracy 0-2",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.69617,
+     "ci": [
+      0.628496,
+      0.74059
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.6986,
+     "ci": [
+      0.63191,
+      0.742305
+     ],
+     "base_minus": {
+      "value": -0.002431,
+      "ci": [
+       -0.007384,
+       0.002314
+      ],
+      "p": 0.347965
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.530695,
+     "ci": [
+      0.479743,
+      0.574403
+     ],
+     "base_minus": {
+      "value": 0.165475,
+      "ci": [
+       0.139675,
+       0.185074
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.559636,
+     "ci": [
+      0.50704,
+      0.603176
+     ],
+     "base_minus": {
+      "value": 0.136534,
+      "ci": [
+       0.112416,
+       0.157511
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.027509,
+     "ci": [
+      -0.003384,
+      0.052124
+     ],
+     "base_minus": {
+      "value": 0.668661,
+      "ci": [
+       0.604254,
+       0.717772
+      ],
+      "p": 0.000204
+     }
+    },
+    "zipa-alone": {
+     "value": 0.430257,
+     "ci": [
+      0.386568,
+      0.47138
+     ],
+     "base_minus": {
+      "value": 0.265913,
+      "ci": [
+       0.229639,
+       0.291453
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.535993,
+     "ci": [
+      0.461615,
+      0.594791
+     ],
+     "base_minus": {
+      "value": 0.160177,
+      "ci": [
+       0.13328,
+       0.184325
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not given (syllable level only)"
+    },
+    "toneperfect": {
+     "value": 0.555073,
+     "ci": [
+      0.473695,
+      0.617562
+     ],
+     "base_minus": {
+      "value": 0.141097,
+      "ci": [
+       0.114174,
+       0.168843
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "sound",
+   "n_items": 32649,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.466205,
+     "ci": [
+      0.433078,
+      0.499307
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.464439,
+     "ci": [
+      0.431247,
+      0.497848
+     ],
+     "base_minus": {
+      "value": 0.001766,
+      "ci": [
+       -0.00053,
+       0.004074
+      ],
+      "p": 0.133587
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.476672,
+     "ci": [
+      0.446737,
+      0.5057
+     ],
+     "base_minus": {
+      "value": -0.010467,
+      "ci": [
+       -0.020835,
+       -9.5e-05
+      ],
+      "p": 0.048195
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.491267,
+     "ci": [
+      0.461409,
+      0.520295
+     ],
+     "base_minus": {
+      "value": -0.025062,
+      "ci": [
+       -0.03455,
+       -0.015595
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.019669,
+     "ci": [
+      -0.020909,
+      0.053708
+     ],
+     "base_minus": {
+      "value": 0.446536,
+      "ci": [
+       0.403405,
+       0.495477
+      ],
+      "p": 0.000203
+     }
+    },
+    "zipa-alone": {
+     "value": 0.30768,
+     "ci": [
+      0.275829,
+      0.336956
+     ],
+     "base_minus": {
+      "value": 0.158525,
+      "ci": [
+       0.143772,
+       0.175074
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.335836,
+     "ci": [
+      0.286027,
+      0.38335
+     ],
+     "base_minus": {
+      "value": 0.130369,
+      "ci": [
+       0.111517,
+       0.151516
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not given (syllable level only)"
+    },
+    "toneperfect": {
+     "value": 0.296012,
+     "ci": [
+      0.242352,
+      0.347122
+     ],
+     "base_minus": {
+      "value": 0.170193,
+      "ci": [
+       0.148395,
+       0.194447
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "word",
+   "n_items": 11013,
+   "n_speakers": 125,
+   "note": "expert word accuracy 0-10",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.639442,
+     "ci": [
+      0.562424,
+      0.696794
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.640691,
+     "ci": [
+      0.56525,
+      0.696405
+     ],
+     "base_minus": {
+      "value": -0.001248,
+      "ci": [
+       -0.007188,
+       0.004242
+      ],
+      "p": 0.677532
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.578815,
+     "ci": [
+      0.491029,
+      0.643682
+     ],
+     "base_minus": {
+      "value": 0.060627,
+      "ci": [
+       0.032114,
+       0.093627
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.615158,
+     "ci": [
+      0.526503,
+      0.675981
+     ],
+     "base_minus": {
+      "value": 0.024284,
+      "ci": [
+       -0.009548,
+       0.0605
+      ],
+      "p": 0.147385
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.025265,
+     "ci": [
+      -0.005876,
+      0.049086
+     ],
+     "base_minus": {
+      "value": 0.614177,
+      "ci": [
+       0.539731,
+       0.673968
+      ],
+      "p": 0.000203
+     }
+    },
+    "zipa-alone": {
+     "value": 0.396534,
+     "ci": [
+      0.338461,
+      0.451653
+     ],
+     "base_minus": {
+      "value": 0.242908,
+      "ci": [
+       0.203181,
+       0.273967
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.588352,
+     "ci": [
+      0.514889,
+      0.645953
+     ],
+     "base_minus": {
+      "value": 0.051091,
+      "ci": [
+       0.002146,
+       0.092412
+      ],
+      "p": 0.040996
+     }
+    },
+    "lingolix": {
+     "value": 0.479451,
+     "ci": [
+      0.39617,
+      0.552182
+     ],
+     "base_minus": {
+      "value": 0.159992,
+      "ci": [
+       0.097367,
+       0.212169
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.654773,
+     "ci": [
+      0.58085,
+      0.709195
+     ],
+     "base_minus": {
+      "value": -0.01533,
+      "ci": [
+       -0.044213,
+       0.015661
+      ],
+      "p": 0.29917
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "word",
+   "n_items": 11013,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.418349,
+     "ci": [
+      0.364089,
+      0.468322
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.418102,
+     "ci": [
+      0.363616,
+      0.46809
+     ],
+     "base_minus": {
+      "value": 0.000247,
+      "ci": [
+       -0.001801,
+       0.002449
+      ],
+      "p": 0.819318
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.384385,
+     "ci": [
+      0.325371,
+      0.437385
+     ],
+     "base_minus": {
+      "value": 0.033964,
+      "ci": [
+       0.023166,
+       0.045746
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.391694,
+     "ci": [
+      0.333504,
+      0.444448
+     ],
+     "base_minus": {
+      "value": 0.026655,
+      "ci": [
+       0.016405,
+       0.037954
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.012133,
+     "ci": [
+      -0.019699,
+      0.039792
+     ],
+     "base_minus": {
+      "value": 0.406216,
+      "ci": [
+       0.353897,
+       0.456678
+      ],
+      "p": 0.000204
+     }
+    },
+    "zipa-alone": {
+     "value": 0.352408,
+     "ci": [
+      0.308644,
+      0.392551
+     ],
+     "base_minus": {
+      "value": 0.065941,
+      "ci": [
+       0.049986,
+       0.083498
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.413651,
+     "ci": [
+      0.359761,
+      0.463001
+     ],
+     "base_minus": {
+      "value": 0.004698,
+      "ci": [
+       -0.008189,
+       0.01749
+      ],
+      "p": 0.476552
+     }
+    },
+    "lingolix": {
+     "value": 0.439787,
+     "ci": [
+      0.384368,
+      0.488452
+     ],
+     "base_minus": {
+      "value": -0.021438,
+      "ci": [
+       -0.040733,
+       -0.001738
+      ],
+      "p": 0.034797
+     }
+    },
+    "toneperfect": {
+     "value": 0.422054,
+     "ci": [
+      0.365967,
+      0.473932
+     ],
+     "base_minus": {
+      "value": -0.003705,
+      "ci": [
+       -0.014452,
+       0.006495
+      ],
+      "p": 0.474353
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "sentence total",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.794087,
+     "ci": [
+      0.743794,
+      0.83412
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.791004,
+     "ci": [
+      0.740195,
+      0.831534
+     ],
+     "base_minus": {
+      "value": 0.003083,
+      "ci": [
+       -0.002799,
+       0.009801
+      ],
+      "p": 0.331567
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.788532,
+     "ci": [
+      0.728312,
+      0.832876
+     ],
+     "base_minus": {
+      "value": 0.005555,
+      "ci": [
+       -0.036164,
+       0.043791
+      ],
+      "p": 0.729327
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.799193,
+     "ci": [
+      0.741137,
+      0.83944
+     ],
+     "base_minus": {
+      "value": -0.005106,
+      "ci": [
+       -0.04233,
+       0.031522
+      ],
+      "p": 0.847115
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.079152,
+     "ci": [
+      -0.015765,
+      0.143727
+     ],
+     "base_minus": {
+      "value": 0.714935,
+      "ci": [
+       0.637649,
+       0.811099
+      ],
+      "p": 0.000203
+     }
+    },
+    "zipa-alone": {
+     "value": 0.614968,
+     "ci": [
+      0.542937,
+      0.677918
+     ],
+     "base_minus": {
+      "value": 0.179119,
+      "ci": [
+       0.116545,
+       0.235078
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.800602,
+     "ci": [
+      0.749628,
+      0.83736
+     ],
+     "base_minus": {
+      "value": -0.006515,
+      "ci": [
+       -0.047678,
+       0.030951
+      ],
+      "p": 0.783922
+     }
+    },
+    "lingolix": {
+     "value": 0.669724,
+     "ci": [
+      0.581638,
+      0.73795
+     ],
+     "base_minus": {
+      "value": 0.124363,
+      "ci": [
+       0.061026,
+       0.189663
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.715265,
+     "ci": [
+      0.622134,
+      0.782053
+     ],
+     "base_minus": {
+      "value": 0.078822,
+      "ci": [
+       0.015446,
+       0.151622
+      ],
+      "p": 0.013999
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "sentence total",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.770936,
+     "ci": [
+      0.718215,
+      0.812444
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.767345,
+     "ci": [
+      0.713632,
+      0.810033
+     ],
+     "base_minus": {
+      "value": 0.003591,
+      "ci": [
+       -0.00106,
+       0.008897
+      ],
+      "p": 0.140986
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.735811,
+     "ci": [
+      0.678565,
+      0.782222
+     ],
+     "base_minus": {
+      "value": 0.035125,
+      "ci": [
+       0.015902,
+       0.055638
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.734392,
+     "ci": [
+      0.676455,
+      0.782049
+     ],
+     "base_minus": {
+      "value": 0.036543,
+      "ci": [
+       0.015726,
+       0.058398
+      ],
+      "p": 0.0006
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.048585,
+     "ci": [
+      -0.058177,
+      0.142491
+     ],
+     "base_minus": {
+      "value": 0.722351,
+      "ci": [
+       0.618943,
+       0.830994
+      ],
+      "p": 0.000203
+     }
+    },
+    "zipa-alone": {
+     "value": 0.617424,
+     "ci": [
+      0.550068,
+      0.67223
+     ],
+     "base_minus": {
+      "value": 0.153512,
+      "ci": [
+       0.121795,
+       0.188401
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.759703,
+     "ci": [
+      0.705113,
+      0.804351
+     ],
+     "base_minus": {
+      "value": 0.011233,
+      "ci": [
+       -0.008642,
+       0.031011
+      ],
+      "p": 0.273373
+     }
+    },
+    "lingolix": {
+     "value": 0.633433,
+     "ci": [
+      0.563913,
+      0.693104
+     ],
+     "base_minus": {
+      "value": 0.137503,
+      "ci": [
+       0.101276,
+       0.177856
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.675764,
+     "ci": [
+      0.60406,
+      0.73647
+     ],
+     "base_minus": {
+      "value": 0.095171,
+      "ci": [
+       0.063609,
+       0.130782
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "sentence accuracy",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.778308,
+     "ci": [
+      0.721869,
+      0.818342
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.773454,
+     "ci": [
+      0.716671,
+      0.813832
+     ],
+     "base_minus": {
+      "value": 0.004854,
+      "ci": [
+       -0.001538,
+       0.012306
+      ],
+      "p": 0.149185
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.741291,
+     "ci": [
+      0.677273,
+      0.787151
+     ],
+     "base_minus": {
+      "value": 0.037017,
+      "ci": [
+       0.0133,
+       0.063494
+      ],
+      "p": 0.0036
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.762543,
+     "ci": [
+      0.70138,
+      0.804787
+     ],
+     "base_minus": {
+      "value": 0.015765,
+      "ci": [
+       -0.007801,
+       0.040301
+      ],
+      "p": 0.182982
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.080069,
+     "ci": [
+      -0.01235,
+      0.144826
+     ],
+     "base_minus": {
+      "value": 0.698239,
+      "ci": [
+       0.616802,
+       0.795372
+      ],
+      "p": 0.000204
+     }
+    },
+    "zipa-alone": {
+     "value": 0.584505,
+     "ci": [
+      0.517014,
+      0.644529
+     ],
+     "base_minus": {
+      "value": 0.193803,
+      "ci": [
+       0.149856,
+       0.236378
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.68114,
+     "ci": [
+      0.619011,
+      0.729499
+     ],
+     "base_minus": {
+      "value": 0.097168,
+      "ci": [
+       0.061784,
+       0.134261
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "value": 0.576361,
+     "ci": [
+      0.494597,
+      0.642969
+     ],
+     "base_minus": {
+      "value": 0.201947,
+      "ci": [
+       0.147996,
+       0.258963
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.68296,
+     "ci": [
+      0.597193,
+      0.746862
+     ],
+     "base_minus": {
+      "value": 0.095348,
+      "ci": [
+       0.052225,
+       0.146629
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "sentence accuracy",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.743942,
+     "ci": [
+      0.685333,
+      0.791018
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.737876,
+     "ci": [
+      0.677303,
+      0.78652
+     ],
+     "base_minus": {
+      "value": 0.006067,
+      "ci": [
+       0.001061,
+       0.011872
+      ],
+      "p": 0.014799
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.696823,
+     "ci": [
+      0.632635,
+      0.749115
+     ],
+     "base_minus": {
+      "value": 0.047119,
+      "ci": [
+       0.026537,
+       0.070139
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.704587,
+     "ci": [
+      0.640818,
+      0.756698
+     ],
+     "base_minus": {
+      "value": 0.039355,
+      "ci": [
+       0.018388,
+       0.061199
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.055565,
+     "ci": [
+      -0.059394,
+      0.154348
+     ],
+     "base_minus": {
+      "value": 0.688378,
+      "ci": [
+       0.574646,
+       0.808542
+      ],
+      "p": 0.000204
+     }
+    },
+    "zipa-alone": {
+     "value": 0.599996,
+     "ci": [
+      0.530741,
+      0.657279
+     ],
+     "base_minus": {
+      "value": 0.143946,
+      "ci": [
+       0.116111,
+       0.174262
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.647623,
+     "ci": [
+      0.577389,
+      0.706434
+     ],
+     "base_minus": {
+      "value": 0.096319,
+      "ci": [
+       0.061975,
+       0.132994
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "value": 0.58191,
+     "ci": [
+      0.511592,
+      0.642703
+     ],
+     "base_minus": {
+      "value": 0.162032,
+      "ci": [
+       0.126345,
+       0.201997
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.649501,
+     "ci": [
+      0.572516,
+      0.71412
+     ],
+     "base_minus": {
+      "value": 0.094441,
+      "ci": [
+       0.063587,
+       0.129348
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "sentence fluency",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.818546,
+     "ci": [
+      0.759783,
+      0.867196
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.818634,
+     "ci": [
+      0.763631,
+      0.865408
+     ],
+     "base_minus": {
+      "value": -8.7e-05,
+      "ci": [
+       -0.008258,
+       0.007045
+      ],
+      "p": 0.952305
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.824774,
+     "ci": [
+      0.772411,
+      0.861026
+     ],
+     "base_minus": {
+      "value": -0.006228,
+      "ci": [
+       -0.0747,
+       0.052224
+      ],
+      "p": 0.949705
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.835061,
+     "ci": [
+      0.784866,
+      0.867697
+     ],
+     "base_minus": {
+      "value": -0.016515,
+      "ci": [
+       -0.079359,
+       0.042151
+      ],
+      "p": 0.69613
+     }
+    },
+    "openpronounce-0.4.0": {
+     "status": "not run"
+    },
+    "zipa-alone": {
+     "value": 0.564548,
+     "ci": [
+      0.474585,
+      0.637415
+     ],
+     "base_minus": {
+      "value": 0.253998,
+      "ci": [
+       0.153687,
+       0.349909
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.720516,
+     "ci": [
+      0.630837,
+      0.776391
+     ],
+     "base_minus": {
+      "value": 0.098031,
+      "ci": [
+       0.014364,
+       0.191586
+      ],
+      "p": 0.021598
+     }
+    },
+    "lingolix": {
+     "status": "not given"
+    },
+    "toneperfect": {
+     "status": "not given"
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "sentence fluency",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.812149,
+     "ci": [
+      0.762721,
+      0.850125
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.80758,
+     "ci": [
+      0.756886,
+      0.846863
+     ],
+     "base_minus": {
+      "value": 0.004569,
+      "ci": [
+       0.000778,
+       0.008693
+      ],
+      "p": 0.018598
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.769901,
+     "ci": [
+      0.713704,
+      0.81476
+     ],
+     "base_minus": {
+      "value": 0.042248,
+      "ci": [
+       0.019844,
+       0.066968
+      ],
+      "p": 0.0004
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.773762,
+     "ci": [
+      0.71762,
+      0.818593
+     ],
+     "base_minus": {
+      "value": 0.038388,
+      "ci": [
+       0.01607,
+       0.063435
+      ],
+      "p": 0.0004
+     }
+    },
+    "openpronounce-0.4.0": {
+     "status": "not run"
+    },
+    "zipa-alone": {
+     "value": 0.540585,
+     "ci": [
+      0.453916,
+      0.611882
+     ],
+     "base_minus": {
+      "value": 0.271564,
+      "ci": [
+       0.224265,
+       0.325256
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.615244,
+     "ci": [
+      0.536281,
+      0.683585
+     ],
+     "base_minus": {
+      "value": 0.196906,
+      "ci": [
+       0.149263,
+       0.249885
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not given"
+    },
+    "toneperfect": {
+     "status": "not given"
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Pearson",
+   "unit": "sentence prosodic",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.809337,
+     "ci": [
+      0.75344,
+      0.856935
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.808909,
+     "ci": [
+      0.756462,
+      0.854891
+     ],
+     "base_minus": {
+      "value": 0.000428,
+      "ci": [
+       -0.006854,
+       0.006681
+      ],
+      "p": 0.835516
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.809008,
+     "ci": [
+      0.751565,
+      0.850832
+     ],
+     "base_minus": {
+      "value": 0.00033,
+      "ci": [
+       -0.066818,
+       0.055858
+      ],
+      "p": 0.886911
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.822603,
+     "ci": [
+      0.766927,
+      0.861882
+     ],
+     "base_minus": {
+      "value": -0.013265,
+      "ci": [
+       -0.073673,
+       0.04102
+      ],
+      "p": 0.755524
+     }
+    },
+    "openpronounce-0.4.0": {
+     "status": "not run"
+    },
+    "zipa-alone": {
+     "value": 0.591457,
+     "ci": [
+      0.509071,
+      0.660143
+     ],
+     "base_minus": {
+      "value": 0.217881,
+      "ci": [
+       0.126296,
+       0.302023
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.832754,
+     "ci": [
+      0.79195,
+      0.861224
+     ],
+     "base_minus": {
+      "value": -0.023417,
+      "ci": [
+       -0.076631,
+       0.022379
+      ],
+      "p": 0.411959
+     }
+    },
+    "lingolix": {
+     "status": "not given"
+    },
+    "toneperfect": {
+     "status": "not given"
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "Spearman",
+   "unit": "sentence prosodic",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.804348,
+     "ci": [
+      0.750984,
+      0.844354
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.799559,
+     "ci": [
+      0.745506,
+      0.840162
+     ],
+     "base_minus": {
+      "value": 0.004789,
+      "ci": [
+       0.000418,
+       0.009507
+      ],
+      "p": 0.029997
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.759221,
+     "ci": [
+      0.697639,
+      0.806499
+     ],
+     "base_minus": {
+      "value": 0.045127,
+      "ci": [
+       0.02225,
+       0.070827
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.760479,
+     "ci": [
+      0.698242,
+      0.808998
+     ],
+     "base_minus": {
+      "value": 0.043869,
+      "ci": [
+       0.021255,
+       0.068694
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-0.4.0": {
+     "status": "not run"
+    },
+    "zipa-alone": {
+     "value": 0.573454,
+     "ci": [
+      0.493192,
+      0.638898
+     ],
+     "base_minus": {
+      "value": 0.230894,
+      "ci": [
+       0.186516,
+       0.283134
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.791821,
+     "ci": [
+      0.73629,
+      0.834069
+     ],
+     "base_minus": {
+      "value": 0.012527,
+      "ci": [
+       -0.009,
+       0.036076
+      ],
+      "p": 0.275972
+     }
+    },
+    "lingolix": {
+     "status": "not given"
+    },
+    "toneperfect": {
+     "status": "not given"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher marks",
+   "metric": "AUC",
+   "unit": "word (character): any error",
+   "n_items": 8156,
+   "n_speakers": 21,
+   "note": "all 21 speakers, natives included (as results/ompal.md)",
+   "n_pos": 1220,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.789986,
+     "ci": [
+      0.74679,
+      0.836347
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.78754,
+     "ci": [
+      0.743904,
+      0.834471
+     ],
+     "base_minus": {
+      "value": 0.002446,
+      "ci": [
+       -0.000165,
+       0.00468
+      ],
+      "p": 0.066793
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.602345,
+     "ci": [
+      0.555982,
+      0.64369
+     ],
+     "base_minus": {
+      "value": 0.187641,
+      "ci": [
+       0.154287,
+       0.241643
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.704161,
+     "ci": [
+      0.653418,
+      0.750594
+     ],
+     "base_minus": {
+      "value": 0.085824,
+      "ci": [
+       0.059756,
+       0.133554
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.845077,
+     "ci": [
+      0.817258,
+      0.87047
+     ],
+     "base_minus": {
+      "value": -0.055091,
+      "ci": [
+       -0.088161,
+       -0.011131
+      ],
+      "p": 0.015998
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher marks",
+   "metric": "AUC",
+   "unit": "word (character): consonant or vowel error",
+   "n_items": 8156,
+   "n_speakers": 21,
+   "note": "",
+   "n_pos": 212,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.852543,
+     "ci": [
+      0.799631,
+      0.890719
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.855674,
+     "ci": [
+      0.804192,
+      0.893336
+     ],
+     "base_minus": {
+      "value": -0.003132,
+      "ci": [
+       -0.00786,
+       0.001391
+      ],
+      "p": 0.160584
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.839394,
+     "ci": [
+      0.786912,
+      0.880734
+     ],
+     "base_minus": {
+      "value": 0.013149,
+      "ci": [
+       -0.0165,
+       0.044124
+      ],
+      "p": 0.388561
+     }
+    },
+    "azure": {
+     "value": 0.821896,
+     "ci": [
+      0.735582,
+      0.874309
+     ],
+     "base_minus": {
+      "value": 0.030646,
+      "ci": [
+       -0.008033,
+       0.088151
+      ],
+      "p": 0.138986
+     }
+    },
+    "toneperfect": {
+     "value": 0.819283,
+     "ci": [
+      0.777164,
+      0.852371
+     ],
+     "base_minus": {
+      "value": 0.033259,
+      "ci": [
+       -0.004845,
+       0.069932
+      ],
+      "p": 0.083392
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher marks",
+   "metric": "AUC",
+   "unit": "word (character): tone-only error",
+   "n_items": 8156,
+   "n_speakers": 21,
+   "note": "",
+   "n_pos": 1008,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.776829,
+     "ci": [
+      0.728431,
+      0.830322
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.77321,
+     "ci": [
+      0.725173,
+      0.826746
+     ],
+     "base_minus": {
+      "value": 0.003619,
+      "ci": [
+       0.000503,
+       0.006193
+      ],
+      "p": 0.021998
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.552489,
+     "ci": [
+      0.504168,
+      0.589951
+     ],
+     "base_minus": {
+      "value": 0.22434,
+      "ci": [
+       0.186909,
+       0.292327
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.6794,
+     "ci": [
+      0.616859,
+      0.734134
+     ],
+     "base_minus": {
+      "value": 0.097429,
+      "ci": [
+       0.064814,
+       0.153034
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.850501,
+     "ci": [
+      0.82353,
+      0.877486
+     ],
+     "base_minus": {
+      "value": -0.073673,
+      "ci": [
+       -0.115305,
+       -0.02516
+      ],
+      "p": 0.004
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher scores",
+   "metric": "Pearson",
+   "unit": "sentence accuracy",
+   "n_items": 663,
+   "n_speakers": 18,
+   "note": "learners only; teachers' mean sentence accuracy",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.634392,
+     "ci": [
+      0.461477,
+      0.741927
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.635251,
+     "ci": [
+      0.463723,
+      0.741556
+     ],
+     "base_minus": {
+      "value": -0.000859,
+      "ci": [
+       -0.005384,
+       0.004024
+      ],
+      "p": 0.738526
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.30164,
+     "ci": [
+      0.086397,
+      0.425103
+     ],
+     "base_minus": {
+      "value": 0.332752,
+      "ci": [
+       0.205806,
+       0.462888
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.362804,
+     "ci": [
+      0.170245,
+      0.478325
+     ],
+     "base_minus": {
+      "value": 0.271588,
+      "ci": [
+       0.197801,
+       0.346812
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.384992,
+     "ci": [
+      0.216659,
+      0.489299
+     ],
+     "base_minus": {
+      "value": 0.2494,
+      "ci": [
+       0.165188,
+       0.319014
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher scores",
+   "metric": "Spearman",
+   "unit": "sentence accuracy",
+   "n_items": 663,
+   "n_speakers": 18,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.638219,
+     "ci": [
+      0.451872,
+      0.760714
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.638851,
+     "ci": [
+      0.454285,
+      0.759006
+     ],
+     "base_minus": {
+      "value": -0.000632,
+      "ci": [
+       -0.006138,
+       0.005732
+      ],
+      "p": 0.889911
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.30815,
+     "ci": [
+      0.074811,
+      0.468096
+     ],
+     "base_minus": {
+      "value": 0.33007,
+      "ci": [
+       0.216161,
+       0.441817
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.424383,
+     "ci": [
+      0.204835,
+      0.564511
+     ],
+     "base_minus": {
+      "value": 0.213836,
+      "ci": [
+       0.153801,
+       0.307586
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.400885,
+     "ci": [
+      0.183911,
+      0.545858
+     ],
+     "base_minus": {
+      "value": 0.237335,
+      "ci": [
+       0.147221,
+       0.331225
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher scores",
+   "metric": "Pearson",
+   "unit": "sentence fluency",
+   "n_items": 663,
+   "n_speakers": 18,
+   "note": "",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.590342,
+     "ci": [
+      0.482875,
+      0.673952
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.590353,
+     "ci": [
+      0.486858,
+      0.673089
+     ],
+     "base_minus": {
+      "value": -1.1e-05,
+      "ci": [
+       -0.007796,
+       0.005707
+      ],
+      "p": 0.939106
+     }
+    },
+    "zipa-alone": {
+     "value": 0.127162,
+     "ci": [
+      -0.035684,
+      0.253757
+     ],
+     "base_minus": {
+      "value": 0.46318,
+      "ci": [
+       0.355017,
+       0.579606
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.343241,
+     "ci": [
+      0.197511,
+      0.456
+     ],
+     "base_minus": {
+      "value": 0.247101,
+      "ci": [
+       0.171984,
+       0.332968
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "toneperfect": {
+     "status": "not given"
+    }
+   }
+  },
+  {
+   "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+   "lang": "en",
+   "label_type": "expert scores",
+   "metric": "C",
+   "unit": "sentence accuracy",
+   "n_items": 1722,
+   "n_speakers": 125,
+   "note": "combined-score component",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.848613,
+     "ci": [
+      0.825433,
+      0.867186
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.845276,
+     "ci": [
+      0.82145,
+      0.864296
+     ],
+     "base_minus": {
+      "value": 0.003337,
+      "ci": [
+       0.000562,
+       0.006316
+      ],
+      "p": 0.013399
+     }
+    },
+    "openpronounce-1.1.0": {
+     "value": 0.82233,
+     "ci": [
+      0.796404,
+      0.843485
+     ],
+     "base_minus": {
+      "value": 0.026283,
+      "ci": [
+       0.014582,
+       0.03872
+      ],
+      "p": 0.0002
+     }
+    },
+    "openpronounce-1.1.0-student": {
+     "value": 0.827307,
+     "ci": [
+      0.801755,
+      0.848317
+     ],
+     "base_minus": {
+      "value": 0.021306,
+      "ci": [
+       0.009546,
+       0.033312
+      ],
+      "p": 0.0008
+     }
+    },
+    "openpronounce-0.4.0": {
+     "value": 0.507127,
+     "ci": [
+      0.493559,
+      0.523512
+     ],
+     "base_minus": {
+      "value": 0.341487,
+      "ci": [
+       0.313541,
+       0.364334
+      ],
+      "p": 0.0002
+     }
+    },
+    "zipa-alone": {
+     "value": 0.768854,
+     "ci": [
+      0.740853,
+      0.791807
+     ],
+     "base_minus": {
+      "value": 0.079759,
+      "ci": [
+       0.065806,
+       0.094297
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.794614,
+     "ci": [
+      0.765717,
+      0.81854
+     ],
+     "base_minus": {
+      "value": 0.053999,
+      "ci": [
+       0.035571,
+       0.073351
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "value": 0.760996,
+     "ci": [
+      0.73295,
+      0.785499
+     ],
+     "base_minus": {
+      "value": 0.087617,
+      "ci": [
+       0.069414,
+       0.106021
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.799164,
+     "ci": [
+      0.765736,
+      0.826402
+     ],
+     "base_minus": {
+      "value": 0.04945,
+      "ci": [
+       0.033613,
+       0.067205
+      ],
+      "p": 0.0002
+     }
+    }
+   }
+  },
+  {
+   "test": "OMPAL test, TonePerfect sample (745 recordings)",
+   "lang": "zh",
+   "label_type": "teacher scores",
+   "metric": "C",
+   "unit": "sentence accuracy",
+   "n_items": 663,
+   "n_speakers": 18,
+   "note": "combined-score component",
+   "n_pos": null,
+   "systems": {
+    "pronunciada-fp32": {
+     "value": 0.761236,
+     "ci": [
+      0.681757,
+      0.818095
+     ]
+    },
+    "pronunciada-int8": {
+     "value": 0.760841,
+     "ci": [
+      0.681812,
+      0.816242
+     ],
+     "base_minus": {
+      "value": 0.000396,
+      "ci": [
+       -0.002351,
+       0.003491
+      ],
+      "p": 0.744926
+     }
+    },
+    "openpronounce-1.1.0": {
+     "status": "not supported"
+    },
+    "openpronounce-1.1.0-student": {
+     "status": "not supported"
+    },
+    "openpronounce-0.4.0": {
+     "status": "not supported"
+    },
+    "zipa-alone": {
+     "value": 0.619825,
+     "ci": [
+      0.528325,
+      0.682057
+     ],
+     "base_minus": {
+      "value": 0.141411,
+      "ci": [
+       0.09339,
+       0.184322
+      ],
+      "p": 0.0002
+     }
+    },
+    "azure": {
+     "value": 0.665673,
+     "ci": [
+      0.579535,
+      0.719591
+     ],
+     "base_minus": {
+      "value": 0.095564,
+      "ci": [
+       0.070389,
+       0.131693
+      ],
+      "p": 0.0002
+     }
+    },
+    "toneperfect": {
+     "value": 0.654111,
+     "ci": [
+      0.568389,
+      0.709971
+     ],
+     "base_minus": {
+      "value": 0.107126,
+      "ci": [
+       0.06718,
+       0.144553
+      ],
+      "p": 0.0002
+     }
+    },
+    "lingolix": {
+     "status": "not supported (no Mandarin)"
+    }
+   }
+  }
+ ],
+ "toneperfect": {
+  "speechocean762": {
+   "versions": {
+    "multilingual-native-v1-en-6605a72ce19a+scoremap-5__rv2": 1722
+   },
+   "first_utc": "2026-11-23T18:06:07Z",
+   "last_utc": "2026-11-25T04:16:26Z",
+   "answered": 1722
+  },
+  "ompal": {
+   "versions": {
+    "mandarin-human-v2-85741cdf3967-fbf73d85ee88+scoremap-5__rv2": 745
+   },
+   "first_utc": "2026-11-23T18:06:31Z",
+   "last_utc": "2026-11-25T03:19:16Z",
+   "answered": 745
+  }
+ },
+ "combined": {
+  "languages": [
+   "en",
+   "zh"
+  ],
+  "note": "Combined score: the unweighted mean over languages of one concordance C per language (0.5 = chance, 1 = perfect agreement): en speechocean762 test, the system's sentence accuracy score against the experts' sentence accuracy; zh OMPAL test learners, the same against the teachers' mean accuracy; es Heroico / USMA and de LeaP, native against learner recordings of the same prompt (the system's sentence score, the learner suite's primary tests). Speakers are resampled within each language; a system is compared with Pronunciada fp32 on the languages both cover.",
+  "per_language": {
+   "en": {
+    "test": "speechocean762 test, TonePerfect sample (1722 recordings)",
+    "items": 1722,
+    "speakers": 125,
+    "values": {
+     "pronunciada-fp32": 0.848613,
+     "pronunciada-int8": 0.845276,
+     "openpronounce-1.1.0": 0.82233,
+     "openpronounce-1.1.0-student": 0.827307,
+     "openpronounce-0.4.0": 0.507127,
+     "zipa-alone": 0.768854,
+     "azure": 0.794614,
+     "lingolix": 0.760996,
+     "toneperfect": 0.799164
+    }
+   },
+   "zh": {
+    "test": "OMPAL test, TonePerfect sample (745 recordings)",
+    "items": 663,
+    "speakers": 18,
+    "values": {
+     "pronunciada-fp32": 0.761236,
+     "pronunciada-int8": 0.760841,
+     "zipa-alone": 0.619825,
+     "azure": 0.665673,
+     "toneperfect": 0.654111
+    }
+   }
+  },
+  "systems": {
+   "pronunciada-fp32": {
+    "languages": [
+     "en",
+     "zh"
+    ],
+    "value": 0.804925,
+    "ci": [
+     0.763397,
+     0.835062
+    ],
+    "base_value": 0.804925
+   },
+   "pronunciada-int8": {
+    "languages": [
+     "en",
+     "zh"
+    ],
+    "value": 0.803058,
+    "ci": [
+     0.761863,
+     0.832711
+    ],
+    "base_value": 0.804925,
+    "base_minus": {
+     "value": 0.001866,
+     "ci": [
+      -4.2e-05,
+      0.004026
+     ],
+     "p": 0.055394
+    }
+   },
+   "openpronounce-1.1.0": {
+    "languages": [
+     "en"
+    ],
+    "value": 0.82233,
+    "ci": [
+     0.796879,
+     0.843271
+    ],
+    "base_value": 0.848613,
+    "base_minus": {
+     "value": 0.026283,
+     "ci": [
+      0.014727,
+      0.03847
+     ],
+     "p": 0.0002
+    }
+   },
+   "openpronounce-1.1.0-student": {
+    "languages": [
+     "en"
+    ],
+    "value": 0.827307,
+    "ci": [
+     0.801775,
+     0.848029
+    ],
+    "base_value": 0.848613,
+    "base_minus": {
+     "value": 0.021306,
+     "ci": [
+      0.009958,
+      0.033226
+     ],
+     "p": 0.0004
+    }
+   },
+   "openpronounce-0.4.0": {
+    "languages": [
+     "en"
+    ],
+    "value": 0.507127,
+    "ci": [
+     0.493328,
+     0.524044
+    ],
+    "base_value": 0.848613,
+    "base_minus": {
+     "value": 0.341487,
+     "ci": [
+      0.314293,
+      0.36449
+     ],
+     "p": 0.0002
+    }
+   },
+   "azure": {
+    "languages": [
+     "en",
+     "zh"
+    ],
+    "value": 0.730143,
+    "ci": [
+     0.685233,
+     0.760473
+    ],
+    "base_value": 0.804925,
+    "base_minus": {
+     "value": 0.074781,
+     "ci": [
+      0.05924,
+      0.095592
+     ],
+     "p": 0.0002
+    }
+   },
+   "lingolix": {
+    "languages": [
+     "en"
+    ],
+    "value": 0.760996,
+    "ci": [
+     0.732487,
+     0.785424
+    ],
+    "base_value": 0.848613,
+    "base_minus": {
+     "value": 0.087617,
+     "ci": [
+      0.069258,
+      0.106318
+     ],
+     "p": 0.0002
+    }
+   },
+   "zipa-alone": {
+    "languages": [
+     "en",
+     "zh"
+    ],
+    "value": 0.69434,
+    "ci": [
+     0.645406,
+     0.727884
+    ],
+    "base_value": 0.804925,
+    "base_minus": {
+     "value": 0.110585,
+     "ci": [
+      0.086021,
+      0.13361
+     ],
+     "p": 0.0002
+    }
+   },
+   "toneperfect": {
+    "languages": [
+     "en",
+     "zh"
+    ],
+    "value": 0.726637,
+    "ci": [
+     0.680618,
+     0.758541
+    ],
+    "base_value": 0.804925,
+    "base_minus": {
+     "value": 0.078288,
+     "ci": [
+      0.05639,
+      0.099675
+     ],
+     "p": 0.0002
+    }
+   }
+  }
+ }
+}

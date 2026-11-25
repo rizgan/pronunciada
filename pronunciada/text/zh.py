@@ -13,79 +13,13 @@ import re
 import threading
 import unicodedata
 
+from ..reading.zh import (FINALS, INITIALS, PARTICLES, after_sandhi_alts, build_words,  # noqa: F401
+                          parse_pinyin, third_tone_sandhi, yibu_sandhi)
+from ..reading.zh import ERHUA_NOT as _ERHUA_NOT  # noqa: F401
+from ..reading.zh import REDUP_SANDHI as _REDUP_SANDHI  # noqa: F401
 from ..types import Reference
-from ._cjk_common import Ph, Syl, Wd, assemble, data_lines, is_han, is_latin, nfkc_digit
+from ._cjk_common import Wd, assemble, data_lines, is_han, is_latin, nfkc_digit
 from .base import G2P
-
-# --------------------------------------------------------------------------- pinyin -> ZIPA
-
-INITIALS = {
-    "b": "p", "p": "pʰ", "m": "m", "f": "f", "d": "t", "t": "tʰ", "n": "n", "l": "l",
-    "g": "k", "k": "kʰ", "h": "x", "j": "tɕ", "q": "tɕʰ", "x": "ɕ",
-    "zh": "ʈʂ", "ch": "ʈʂʰ", "sh": "ʂ", "r": "ʐ", "z": "ts", "c": "tsʰ", "s": "s",
-}
-_INIT_RE = re.compile(r"^(zh|ch|sh|[bpmfdtnlgkhjqxrzcsyw]?)(.*)$")
-
-# final (after y/w/ü/iu/ui/un normalisation) -> (glide, nucleus, coda) in ZIPA convention
-FINALS: dict[str, tuple[str, str, str]] = {
-    "a": ("", "a", ""), "o": ("", "ɔ", ""), "e": ("", "ɤ", ""), "ê": ("", "ɛ", ""),
-    "ai": ("", "aɪ", ""), "ei": ("", "eɪ", ""), "ao": ("", "ɑʊ", ""), "ou": ("", "oʊ", ""),
-    "an": ("", "a", "n"), "en": ("", "ə", "n"), "ang": ("", "ɑ", "ŋ"), "eng": ("", "ɤ", "ŋ"),
-    "ong": ("", "ʊ", "ŋ"), "er": ("", "ɑɻ", ""),
-    "i": ("", "i", ""), "ia": ("j", "a", ""), "ie": ("j", "ɛ", ""), "iao": ("j", "ɑʊ", ""),
-    "iou": ("j", "oʊ", ""), "ian": ("j", "ɛ", "n"), "in": ("", "i", "n"), "iang": ("j", "ɑ", "ŋ"),
-    "ing": ("", "i", "ŋ"), "iong": ("j", "ʊ", "ŋ"), "io": ("j", "ɔ", ""),
-    "u": ("", "u", ""), "ua": ("w", "a", ""), "uo": ("w", "ɔ", ""), "uai": ("w", "aɪ", ""),
-    "uei": ("w", "eɪ", ""), "uan": ("w", "a", "n"), "uen": ("w", "ə", "n"), "uang": ("w", "ɑ", "ŋ"),
-    "ueng": ("w", "ə", "ŋ"),
-    "ü": ("", "y", ""), "üe": ("ɥ", "œ", ""), "üan": ("ɥ", "œ", "n"), "ün": ("", "y", "n"),
-    "-i": ("", "ɯ", ""),      # apical vowel after z c s (ZIPA: ɯ ~70-90 %)
-    "-ir": ("", "ɨ", ""),     # apical vowel after zh ch sh r
-    # syllabic nasals / interjections
-    "m": ("", "m", ""), "n": ("", "n", ""), "ng": ("", "ŋ", ""), "hm": ("", "m", ""), "hng": ("", "ŋ", ""),
-}
-_Y = {"yi": "i", "ya": "ia", "ye": "ie", "yao": "iao", "you": "iou", "yan": "ian", "yin": "in",
-      "yang": "iang", "ying": "ing", "yong": "iong", "yo": "io", "yu": "ü", "yue": "üe", "yuan": "üan",
-      "yun": "ün"}
-_W = {"wu": "u", "wa": "ua", "wo": "uo", "wai": "uai", "wei": "uei", "wan": "uan", "wen": "uen",
-      "wang": "uang", "weng": "ueng"}
-
-
-def parse_pinyin(base: str) -> tuple[str, str] | None:
-    """'zhong' -> ('zh', 'ong'); 'yu' -> ('', 'ü'); returns (initial, normalised final)."""
-    base = base.replace("v", "ü").replace("u:", "ü")
-    if base in ("m", "n", "ng", "hm", "hng"):
-        return "", base
-    if base in ("e", "ê", "eh"):
-        return "", "ê" if base != "e" else "e"
-    if base in _Y:
-        return "", _Y[base]
-    if base in _W:
-        return "", _W[base]
-    m = _INIT_RE.match(base)
-    if not m:
-        return None
-    ini, fin = m.group(1), m.group(2)
-    if ini in ("y", "w"):
-        return None
-    if ini in ("j", "q", "x") and fin.startswith("u"):
-        fin = "ü" + fin[1:]
-    if ini and fin == "iu":
-        fin = "iou"
-    elif ini and fin == "ui":
-        fin = "uei"
-    elif ini and fin == "un":
-        fin = "uen" if ini not in ("j", "q", "x") else "ün"
-    if fin == "i" and ini in ("z", "c", "s"):
-        fin = "-i"
-    elif fin == "i" and ini in ("zh", "ch", "sh", "r"):
-        fin = "-ir"
-    if ini in ("b", "p", "m", "f") and fin == "o":
-        fin = "uo"           # bo po mo fo are [pwɔ] etc.
-    if fin not in FINALS:
-        return None
-    return ini, fin
-
 
 # --------------------------------------------------------------------------- numbers
 
@@ -142,22 +76,33 @@ def number_reading(tok: str, nxt: str, prev: str) -> str:
 
 # --------------------------------------------------------------------------- tone tables
 
-PARTICLES = set("的地得了着过吗呢吧啊呀嘛啦哦么们哇哪喽呗咯")
 _ZI_FULL = set("原电分质中离光粒量因孔老庄孟荀墨韩君男女天太王弟学游才赤甲臣公仙骄棋种瓜莲")  # X子 with full tone 3
-_ERHUA_NOT = {"女儿", "婴儿", "儿女", "幼儿", "孤儿", "健儿", "宠儿", "胎儿", "少儿", "男儿", "患儿",
-              "育儿", "孙儿", "混血儿", "新生儿", "儿", "托儿", "产儿", "病儿", "犬儿", "侄儿"}
 _ZHU = {"著名", "著作", "显著", "著称", "著述", "卓著", "土著", "编著", "名著", "原著", "巨著", "专著", "论著",
         "著者", "昭著", "著录", "拙著", "遗著", "新著", "译著", "合著", "所著", "大著",
         "彰著", "撰著", "杰著", "近著", "著译"}
-_REDUP_SANDHI = {"想想", "走走", "等等", "写写", "洗洗", "讲讲", "找找", "比比", "哪里", "小姐", "打扫"}
+
+
+INSTALL_HINT = ('the Mandarin text front-end (Chinese characters) needs the optional "zh" extra: '
+                'pip install "pronunciada[zh]"; without it, pass pinyin (pronunciada.phones_from_pinyin) '
+                "or phones (pronunciada.core.score_phones)")
 
 
 class ZhG2P(G2P):
     lang = "zh"
 
     def __init__(self) -> None:
+        import importlib.util
         import logging
 
+        missing = []
+        for m in ("jieba", "pypinyin", "opencc"):
+            try:
+                if importlib.util.find_spec(m) is None:
+                    missing.append(m)
+            except (ImportError, ValueError):
+                missing.append(m)
+        if missing:
+            raise ImportError(INSTALL_HINT + f" (missing: {', '.join(missing)})")
         import jieba
         from opencc import OpenCC
         from pypinyin import Style, lazy_pinyin
@@ -392,184 +337,26 @@ class ZhG2P(G2P):
             if neutral:
                 s["tone"] = 5
                 s["neutral"] = True
-        # 一 and 不 sandhi
-        for i, s in enumerate(S):
-            if s["ch"] not in "一不" or s.get("neutral") or s.get("fixed"):
-                continue
-            nx = S[i + 1] if i + 1 < n else None
-            nt = None
-            if nx is not None:
-                nt = nx["lex"] if nx["tone"] == 5 else nx["tone"]
-            if s["ch"] == "不":
-                if nt == 4:
-                    s["tone"] = 2
-                continue
-            prev = S[i - 1]["ch"] if i > 0 else ""
-            if nx is None or (s["ci"] == s["wl"] - 1 and s["wl"] > 1):
-                continue                  # 统一, 唯一, 之一, phrase-final
-            if nx["ch"] in "百千万亿":
-                if prev and prev in "十零一二三四五六七八九〇":
-                    continue              # 二十一万
-            elif prev and prev in "第零一二三四五六七八九十百千万亿两〇":
-                continue                  # numbers, ordinals: 第一 十一 一百一十
-            elif nx["ch"] in "零一二三四五六七八九十〇":
-                continue                  # digit strings 一九九五
-            if nx["ch"] in "月号":
-                s["alts"].append(2 if nt == 4 else 4)
-                continue
-            s["tone"] = 2 if nt == 4 else 4
-        # third-tone sandhi on maximal chains of consecutive tone-3 syllables
-        i = 0
-        while i < n:
-            if S[i]["tone"] != 3 or S[i].get("fixed"):
-                i += 1
-                continue
-            j = i
-            while j < n and S[j]["tone"] == 3 and not S[j].get("fixed"):
-                j += 1
-            if j - i >= 2:
-                self._t3_chain(S[i:j])
-            i = j
-        # 3 + neutral syllable of underlying tone 3 (想想 xiángxiang, 姐姐 jiějie)
-        for i in range(n - 1):
-            a, b = S[i], S[i + 1]
-            if a["tone"] == 3 and b["tone"] == 5 and b["lex"] == 3 and a["w"] == b["w"]:
-                if a["word"] in _REDUP_SANDHI:
-                    a["tone"], alt = 2, 3
-                else:
-                    alt = 2
-                a["alts"].append(alt)
-        # Taiwan usage: full tone instead of lexical neutral tone; per-character reading tones
-        for s in S:
-            if s["tone"] == 5 and s["ch"] not in PARTICLES and s["lex"] != 5:
-                s["alts"].append(s["lex"])
-            tw = self.tw.get((s["ch"], f"{s['base']}{s['lex']}"))
-            if tw is not None and s["tone"] == s["lex"]:
-                s["alts"].append(tw)
+        yibu_sandhi(S)
+        freq = self._freq
 
-    def _t3_chain(self, C: list[dict]) -> None:
-        """Third-tone sandhi on a chain of tone-3 syllables; word structure decides grouping."""
-        segs: list[list[dict]] = []
-        for s in C:
-            if segs and segs[-1][0]["w"] == s["w"]:
-                segs[-1].append(s)
-            else:
-                segs.append([s])
-        for k, seg in enumerate(segs):
-            last = k == len(segs) - 1
-            m = len(seg)
-            if m == 1:
-                tones, alts = [3], [[]]
-            elif m == 2:
-                tones, alts = [2, 3], [[], []]
-            elif m == 3:
-                w = "".join(x["ch"] for x in seg)
-                if self._freq.get(w[1:], 0) > self._freq.get(w[:2], 0):     # A+BC: 小老虎
-                    tones, alts = [3, 2, 3], [[2], [], []]
-                else:                                                      # AB+C: 展览馆
-                    tones, alts = [2, 2, 3], [[], [], []]
-            else:
-                tones = [2] * (m - 1) + [3]
-                alts = [[3] if q % 2 == 1 else [] for q in range(m - 1)] + [[]]
-            if not last:
-                tones[-1] = 2
-                alts[-1] = alts[-1] + [3]
-            for s, t, a in zip(seg, tones, alts):
-                s["tone"] = t
-                s["alts"].extend(a)
+        def split3(seg):                                   # A+BC (小老虎) when BC is the likelier word
+            w = "".join(x["ch"] for x in seg)
+            return freq.get(w[1:], 0) > freq.get(w[:2], 0)
+
+        third_tone_sandhi(S, split3)
+        after_sandhi_alts(S, self.tw)
 
     # ----------------------------------------------------------------- phones
     def _build(self, S: list[dict], wl, text: str, trad: bool) -> list[Wd]:
-        words: dict[int, Wd] = {}
-        prev_syl: Syl | None = None
-        prev_info = None
-        out: list[Wd] = []
-        for idx, s in enumerate(S):
+        spans = {}
+        for s in S:
             wi = s["w"]
-            if wi not in words:
+            if wi not in spans:
                 chars = wl[wi][1]
                 span = (min(c[0] for c in chars), max(c[1] for c in chars))
-                words[wi] = Wd(text=text[span[0]:span[1]], span=span)
-                out.append(words[wi])
-            # erhua: word-final 儿 merges into the previous syllable of the same word
-            if (s["ch"] == "儿" and s["ci"] == s["wl"] - 1 and s["wl"] >= 2 and s["word"] not in _ERHUA_NOT
-                    and prev_syl is not None and prev_info is not None and prev_info["w"] == wi
-                    and s["base"] == "er"):
-                prev_syl.text += s["shown"]
-                last = prev_syl.phones[-1]
-                if not last.nucleus and last.ipa in ("n", "j"):
-                    last.alt("", -0.3)
-                er = Ph("ɻ")
-                er.alt("ɑɻ", -0.7)
-                er.alt("ə˞", -1.0)
-                prev_syl.phones.append(er)
-                continue
-            parsed = parse_pinyin(s["base"])
-            if parsed is None:
-                continue
-            phones = self._syl_phones(*parsed, s)
-            attrs = {"tone": s["tone"], "tone_lexical": s["lex"],
-                     "tone_alts": sorted({t for t in s["alts"] if t != s["tone"]})}
-            syl = Syl(text=s["shown"], phones=phones, attrs=attrs)
-            words[wi].syls.append(syl)
-            # cross-syllable coda alternatives (assimilation to the next initial)
-            if prev_syl is not None:
-                self._coda_assim(prev_syl, phones)
-            prev_syl, prev_info = syl, s
-        return out
-
-    def _syl_phones(self, ini: str, fin: str, s: dict) -> list[Ph]:
-        glide, nuc, coda = FINALS[fin]
-        out: list[Ph] = []
-        if ini:
-            p = Ph(INITIALS[ini])
-            if ini == "r":
-                p.alt("ɻ", -0.7)
-            if ini == "h":
-                p.alt("h", -1.0)
-            out.append(p)
-        if glide == "j" and not ini and fin in ("iou", "iong"):
-            glide = "y"                # ZIPA writes you/yong as [yoʊ] [yʊŋ] (~95 %)
-        if glide:
-            g = Ph(glide)
-            if glide == "y":
-                g.alt("j", -0.5)
-            elif glide == "j" and ini in ("j", "q", "x"):
-                g.alt("", -1.0)        # glide absorbed by the palatal initial (千 tɕʰɛn)
-            out.append(g)
-        if fin == "eng" and ini in ("sh", "r", "h"):
-            nuc = "ə"                  # ZIPA: ʂəŋ ʐəŋ xəŋ
-        n = Ph(nuc, nucleus=True)
-        if fin == "eng":
-            n.alt("ɤ" if nuc == "ə" else "ə", -0.3)
-        if fin in ("-i", "-ir"):
-            n.alt("", -1.5)            # apical vowel swallowed in fast speech (是 → ʂ)
-            n.alt("ɨ" if fin == "-i" else "ɯ", -0.5)
-        if s["tone"] == 5 and nuc in ("ɤ", "a", "ɔ", "oʊ", "ə", "ɛ"):
-            n.alt("ə", -0.7)          # neutral-tone vowel reduction
-        out.append(n)
-        if fin == "er":
-            n.alt("ɑ", -1.0)
-            n.alt("ə˞", -1.0)
-        if coda:
-            c = Ph(coda)
-            c.alt("", -2.0)            # nasal coda realised as vowel nasalisation only
-            if fin == "in":
-                c.alt("ŋ", -1.0)       # -in / -ing merger, very common in native speech
-            out.append(c)
-        return out
-
-    @staticmethod
-    def _coda_assim(prev: Syl, nxt: list[Ph]) -> None:
-        last = prev.phones[-1]
-        if last.nucleus or last.ipa != "n" or not nxt:
-            return
-        first = nxt[0].ipa
-        if first[0] in "pm":
-            last.alt("m", -1.0)
-        elif first[0] in "kx":
-            last.alt("ŋ", -1.0)
-
+                spans[wi] = (span, text[span[0]:span[1]])
+        return build_words(S, spans)
 
 def build() -> G2P:
     return ZhG2P()

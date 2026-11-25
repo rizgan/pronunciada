@@ -53,7 +53,7 @@ All numbers are IEEE-754 binary64 (`double`). `exp`, `log`, `log1p` are the C li
 (NumPy returned the same bits as the C library on the test machine). Where Python would raise
 (log 0, exp overflow, division by 0) `numeric.py` returns the IEEE result, as C does.
 
-To match production to the last bit, a port must also follow production's order of additions.
+To match production to the last bit, a port must also follow production's order of additions. The golden vectors were written on macOS arm64 and reproduce to the last bit there. On other platforms the C math library returns different last bits, and the repository's tests then allow a difference of 1e-5.
 Every sum in the reference names its order (`numeric.py`):
 
 | order | where |

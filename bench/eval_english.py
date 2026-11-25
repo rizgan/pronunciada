@@ -124,10 +124,12 @@ def so762_items(api):
     for line in open(os.path.join(az_root("speechocean762"), "aligned_test.jsonl"), encoding="utf-8"):
         r = json.loads(line)
         az[r["id"]] = r
-    P = {"y": [], "spk": [], "az": [], "fb": 0, "n_match": 0, **{k: [] for k in SETS + ("U",)}}
-    Wd = {"y": [], "spk": [], "az": [], "fb": 0, "ours": []}
+    # "key": (utt id, word index, phone index) / (utt id, word index) / utt id of every row, so other
+    # systems (bench/third_party/*_live.py) can be lined up with these exact rows
+    P = {"y": [], "spk": [], "az": [], "fb": 0, "n_match": 0, "key": [], **{k: [] for k in SETS + ("U",)}}
+    Wd = {"y": [], "spk": [], "az": [], "fb": 0, "ours": [], "key": []}
     S = {k: [] for k in ("accuracy", "fluency", "prosodic", "total")}
-    S.update({f"az_{k}": [] for k in S}, spk=[], ours={k: [] for k in S})
+    S.update({f"az_{k}": [] for k in S}, spk=[], ours={k: [] for k in S}, key=[])
     calib = {"phone": {"y": [], "zl": [], "zs": [], "zlU": [], "zsU": [], "spk": []},
              "word": {"y": [], "pmin": [], "zl": [], "zs": [], "spk": []},
              "sentence": {"y": [], "all_len_ok": [], "zl": [], "zs": [], "spk": []}}
@@ -167,6 +169,7 @@ def so762_items(api):
                 P["n_match"] += i >= 0
                 P["fb"] += i < 0
                 P["y"].append(float(sc))
+                P["key"].append((rec["id"], j, k))
                 P["spk"].append(spk)
                 P["az"].append(float(a["words"][j]["phones"][k]))
                 if i >= 0:
@@ -178,6 +181,7 @@ def so762_items(api):
                     c["zsU"].append(o["sound"]["U"]["z_str"][i])
                     c["spk"].append(spk)
             Wd["y"].append(float(w["accuracy"]))
+            Wd["key"].append((rec["id"], j))
             Wd["spk"].append(spk)
             Wd["az"].append(float(a["words"][j]["accuracy"]))
             if ow:
@@ -198,6 +202,7 @@ def so762_items(api):
             S[f"az_{k}"].append(0.0 if v is None else float(v))
             S["ours"][k].append(o["sentence"][k])
         S["spk"].append(spk)
+        S["key"].append(rec["id"])
         c = calib["sentence"]
         c["y"].append(float(sl["accuracy"]))
         c["all_len_ok"].append(all(w["accuracy"] >= 5 and (min(w["phones_accuracy"]) if w["phones_accuracy"] else 2) >= 1.0
@@ -459,11 +464,15 @@ def eval_speed(n=100):
             print(prec, th, out[f"{prec}_t{th}"]["median_ms"], flush=True)
     import os as _os
 
-    from pronunciada.acoustic import cache_root
+    from pronunciada import acoustic
 
-    md = _os.path.join(cache_root(), "models", "zipa-small-crctc-500k")
-    out["model_mb"] = {f: round(_os.path.getsize(_os.path.join(md, f)) / 2 ** 20, 1)
-                       for f in ("model.onnx", "model.int8.onnx")}
+    # the backbone file each precision loads (one file per precision in the model cache) and the size of
+    # the download it was built from; MB = 10^6 bytes
+    name = "zipa-small-crctc-500k"
+    out["model_mb"] = {f: round(acoustic.download_size(name, p) / 1e6, 1) for p, f in
+                       (("fp32", "model.onnx"), ("int8", "model.int8.onnx"))}
+    out["model_file_mb"] = {p: round(_os.path.getsize(acoustic.backbone_model_file(name, p)) / 1e6, 1)
+                            for p in ("fp32", "int8")}
     from pronunciada.calibrate import data_dir
 
     out["calib_kb"] = {p.name: round(p.stat().st_size / 1024, 1) for p in sorted(data_dir().glob("*"))}

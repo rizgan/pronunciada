@@ -1,0 +1,34 @@
+{
+ "system": "openpronounce-default",
+ "threads": 4,
+ "n_clips": 200,
+ "audio_seconds": 680.327,
+ "mean_clip_seconds": 3.401635,
+ "load_s": 3.4576640129089355,
+ "cold_start_s": 5.025002956390381,
+ "p50_s": 0.7068760205293074,
+ "p95_s": 0.9082038521009962,
+ "mean_s": 0.7160528926830739,
+ "rtf": 0.21050256499685413,
+ "rtf_median": 0.21479192853639711,
+ "peak_rss_mb": 3879.5,
+ "weights_mb": 2602.774611,
+ "weight_files": [
+  {
+   "file": "3173bde9e9ce490fa0f989e413c42f25bc1820c020adc1e6b9b87025b3cfcc5e",
+   "mb": 1263.5
+  },
+  {
+   "file": "7aef99395c7b7ab5b78b6d00bdf71aebd93a7340b72d614303d598de8f94a10f",
+   "mb": 1262.0
+  },
+  {
+   "file": "5efe09e69902187827af646e1a6e9d269dee769f9877d17b16b1b46eeaaf019f",
+   "mb": 63.2
+  }
+ ],
+ "machine": "Apple M3 Pro",
+ "load_avg_1min_before": 1.76318359375,
+ "load_avg_1min_after": 2.5126953125,
+ "date": "2026-11-23 15:16"
+}

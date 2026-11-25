@@ -3,11 +3,28 @@
 Status (2026-11-23): baselines recorded on commit cbc6d6a (`main` 04e5c8d plus the harness);
 candidates measured. No package default and no shipped file has been changed by this work.
 
+**Model files after the merge with the two-layer work.** The measurements below describe the code of
+`opt-phase1-code` / `opt-phase2`, where the default load saved and then read a pre-optimized copy of the
+backbone graph (`model[.int8].emb-…-final.ort<version>-<platform>-<hash>.onnx`). That is no longer the
+default. The model cache now keeps **one backbone file per precision**: the downloaded model with every
+extra encoder output declared (`model.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.onnx`, 260.3 MB for fp32;
+`model.int8.emb-enc0-enc1-enc2-enc3-enc4-enc5-final.onnx`, 70.7 MB for int8; MB = 10^6 bytes), with a small
+`.json` sidecar of sizes and SHA-256. Once that file is built and checked, the plain download is removed
+(`PRONUNCIADA_KEEP_DOWNLOAD=1` keeps it) and can be restored from it byte for byte. ONNX Runtime optimizes
+the graph at load. The pre-optimized copy is written and read only with `PRONUNCIADA_PREOPT=1`.
+Outputs are identical either way. On a fresh cache the first load takes 1.90 s for fp32 and 1.72 s for
+int8, because it builds the file and checks it. Later loads take 0.42-0.43 s for fp32 and 0.49-0.63 s for
+int8, against 0.24 s and 0.12-0.13 s with the pre-optimized copy. Peak memory of the first load falls from
+842 to 415 MB for fp32 and from 346 to 219 MB for int8. The load figures and file names in the sections
+below are those of the pre-optimized default. The bench/opt harness reads the plain downloaded files: it
+restores them through the package loader (`bench/opt/common.py`, `default_backbone`) and runs with
+`PRONUNCIADA_KEEP_DOWNLOAD=1`.
+
 ## Summary
 
 - **Code changes, gated in full against the fp32 baseline:** `opt-phase1-code` (7834007) and
   `opt-phase2` (06c7eee) both **pass by identity**: every per-clip output and every table is equal.
-- **Effect of 7834007:**
+- **Effect of 7834007** (its load figures are those of the pre-optimized default, which is now opt-in; see above):
   - steady-state scoring is 0.8–1.7 % faster for fp32 and 1.4–3.0 % faster for int8 (about 10 s clips);
   - a later load takes 0.33 s instead of 0.55 s for fp32 and 0.28 s instead of 0.59 s for int8;
   - the first-ever load is 0.3 s slower for fp32 because it builds the pre-optimized file once;
@@ -19,7 +36,7 @@ candidates measured. No package default and no shipped file has been changed by 
   - `dynamic_block_base` changes outputs and was dropped.
 - **Lossless graph rewrites** (onnxslim, ONNX Runtime offline optimization, quantization pre-process) are
   exactly identical, but save at most 1.4 % on disk and no measurable time. The pre-optimized graph of
-  7834007 already takes the load-time gain.
+  7834007 took the load-time gain (now only with `PRONUNCIADA_PREOPT=1`).
 - **int8 against fp32:** in the gate's terms int8 would fail (59 rows). The speechocean762 sentence accuracy
   correlation is 0.0033 lower, two more Azure rows are significantly behind, and native false alarms are higher
   in every language. The int8 backbone is numerically fragile: a feature change of 1e-4 moves its
@@ -853,3 +870,314 @@ Clip lengths in the readiness runs: 5.2 to 23.5 s.
 Bundle contents per language, with licence and why scoring reads each file: the bundles' `manifest.json`. Shared by all ten bundles: `calib/config.json`, `calib/contrast_caps.json`, `calib/omission.json`, `calib/phone_dist.npz`, `calib/sound_U.npz`, `calib/word.npz`, `calib/word_reg.npz`, `calib/word_reg_r6.npz`, `coach/contrast_heads.json`, `zipa_tokens.txt`.
 Not in any bundle: lexicons and other front-end data (`data/lex/`, `data/cjk/`) and coaching-only files. The Japanese and Chinese third-party front-end dictionaries (about 300 MB and 9 MB) are not needed when targets come from elsewhere.
 Peak RSS is measured on desktop Python with NumPy and the full ONNX Runtime; it is an upper reference, not a phone figure.
+
+## On-device model
+
+Goal: about 100 MB on the device in total, with the least quality damage. Candidates keep fp32
+activations and store the weights in 4 to 8 bits, plus one static-int8 variant. All are built by
+`bench/opt/build_small.py`, starting from `model.onnx`, outside the repository. Only the 290 MatMul
+weight matrices change: they are 254 of the 260 MB. Every sensitivity and layout choice was made on
+practice clips only (`bench/opt/sensitivity.py`; FLEURS train). Nothing was adopted and no default
+was changed.
+
+<!-- opt:ondevice-findings -->
+Findings on the backbone alone, measured on the practice clips. Numbers are in the table below;
+posterior-level files are `$PRONUNCIADA_CACHE/opt/results/posterr_*.json` and
+`sensitivity_layers.json`.
+
+- **8-bit weights with fp32 compute are close to lossless and as stable as fp32.** ONNX Runtime
+  1.32 CPU runs MatMulNBits at 8 bits. It accepts block sizes 32 and 128; per-channel is refused
+  in this format. Mean |dlogp| against fp32 is 0.019 to 0.027 nats, mean KL 3 to 6e-5, and 0.14 to
+  0.19 % of frames change their top token. The shipped dynamic int8 gives 0.42 nats, 1e-2 and
+  2.7 %. Under a 1e-4 feature change the 8-bit models move by 0.0042 to 0.0047 nats, which is the
+  fp32 level; the shipped int8 moves by 3.5 nats. Symmetric and asymmetric are equal; block 128
+  is 4 MB smaller than block 32, with slightly larger error.
+- **Pitfall: DequantizeLinear in front of an fp32 MatMul is not safe with default ONNX Runtime
+  options.** At load, ONNX Runtime fuses DequantizeLinear + MatMul into a dynamically quantized
+  int8 MatMul, which brings back the fragility: 0.46 to 1.8 nats under a 1e-4 change. With the
+  session option `session.disable_quant_qdq=1` the graph stays fp32 and is stable (0.0017), but
+  the weights are then dequantized to fp32 at load. Memory is then the fp32 level (532 MB after
+  load against 471 for fp32), and only the download is smaller. The MatMulNBitsQuantizer's QDQ
+  output at 8 bits left the model unchanged; the per-channel QDQ files were written by
+  `build_small.py` itself.
+- **Static int8 (fixed activation scales) does not remove the fragility.** Calibrated with MinMax
+  on 40 practice clips, it gives KL 2.1e-2 and 4.0 % top-token changes against fp32, and 4.1 nats
+  and 2.2 % under a 1e-4 change. So the cause is quantizing the activations at all, not the
+  per-call scale. Percentile calibration failed inside ONNX Runtime's calibrator (histograms of
+  inhomogeneous shape) and was not pursued.
+- **Per-layer sensitivity.** One group of MatMuls at a time was put at 4 bits, with the rest fp32,
+  on 40 practice clips. Per MB, the most sensitive groups are the CTC output projection (0.3 MB,
+  mean KL 3.7e-3), encoder stack 0 (1.2e-3) and stack 5. Encoder stack 3, which holds 121 of the
+  254 MB, is the least sensitive: its feed-forward block is 75.5 MB at KL 7e-5. Layouts A, B and C
+  put stack 3 (A), then the least-sensitive groups up to 150 MB (B) and 200 MB (C), at 4 bits and
+  the rest at 8 bits. They were chosen from these numbers alone, before any held-out run.
+- **All-4-bit is too lossy for this model:** mean KL 8e-3 to 1.2e-2, comparable to the shipped
+  int8, though it is stable.
+<!-- /opt:ondevice-findings -->
+
+### Candidates
+
+<!-- opt:ondevice-candidates -->
+Posterior columns: the backbone alone against fp32 on the 200 practice clips (`sensitivity.py posterr`, 21,596 frames; KL = mean per-frame KL(fp32 || candidate)); fragility: Gaussian feature noise of sd 1e-4 on 20 clips, the candidate against itself (fp32: 0.0041 nats). Score columns: whole Scorer, 200 practice clips, max |difference| at sentence / word / sound level of the 0-1 probabilities (`candidates parity`). Latency: p50 ms per clip (about 10 s of audio), median over en / de / ja / zh, and the paired mean difference against the fp32 default; load: process start to Scorer built (every candidate loads its file through PRONUNCIADA_BACKBONE; `fp32-file` is fp32 loaded the same way). RSS: peak MB, load only / after 10 clips, median over en / zh and 1 / 4 threads.
+
+| candidate | MB | max abs dlogp | mean abs dlogp | KL | top token changed | fragility 1e-4 max (top changed) | max diff sentence / word / sound P | p50 ms 1 / 2 / 4 thr (vs fp32) | load s | RSS MB load / after | screen | gate strict / budget |
+|---|--:|--:|--:|--:|--:|---|---|---|--:|---|---|---|
+| fp32: fp32 (default) | 260.3 | 0 | 0 | 0.0e+00 | 0.00 % | 0.00414 (0.00 %) | 0 / 0 / 0 | 332 / 214 / 157 | 0.52 | 471 / 774 | – | – |
+| int8-dyn: shipped dynamic int8 (MatMulInteger, activations quantized per call) | 70.7 | 5.01 | 0.419 | 1.0e-02 | 2.72 % | 3.49 (0.92 %) | 0.224 (mean 0.0110) / 0.681 (mean 0.0084) / 0.624 (mean 0.0054) | 225 (-32 %) / 156 (-26 %) / 125 (-18 %) | 0.60 | 301 / 599 | – | – |
+| nb8-sym-b32: 8-bit weights, MatMulNBits, symmetric, block 32 | 77.8 | 0.796 | 0.0213 | 3.3e-05 | 0.14 % | 0.00472 (0.00 %) | 0.035 (mean 0.0021) / 0.317 (mean 0.0014) / 0.275 (mean 0.0006) | 382 (+14 %) / 245 (+15 %) / 179 (+12 %) | 0.53 | 304 / 576 | SURVIVES | – |
+| nb8-asym-b32: 8-bit weights, MatMulNBits, asymmetric, block 32 | 79.8 | 0.828 | 0.0186 | 2.8e-05 | 0.14 % | 0.00418 (0.00 %) | – | – | – | – | – | – |
+| nb8-sym-b128: 8-bit weights, MatMulNBits, symmetric, block 128 | 73.4 | 0.999 | 0.0267 | 5.6e-05 | 0.19 % | 0.00421 (0.00 %) | 0.038 (mean 0.0021) / 0.367 (mean 0.0018) / 0.133 (mean 0.0008) | 370 (+10 %) / 235 (+10 %) / 169 (+7 %) | 0.53 | 300 / 571 | SURVIVES | FAIL / FAIL |
+| dq8-sym-ch: int8 per-channel + DequantizeLinear (posterior columns: default ORT options; all other columns with session.disable_quant_qdq=1) | 70.5 | 2.22 | 0.036 | 1.2e-04 | 0.23 % | 0.462 (0.10 %) | 0.075 (mean 0.0033) / 0.318 (mean 0.0020) / 0.221 (mean 0.0009) | 332 (-0 %) / 215 (+1 %) / 154 (+0 %) | 0.62 | 532 / 764 | DISCARD | – |
+| dq8-asym-ch: uint8 per-channel + DequantizeLinear (default ORT options) | 70.5 | 1.69 | 0.035 | 1.1e-04 | 0.24 % | 1.79 (0.11 %) | – | – | – | – | – | – |
+| dq8-sym-tensor: int8 per-tensor + DequantizeLinear (default ORT options) | 69.8 | 1.8 | 0.0578 | 4.0e-04 | 0.56 % | 0.696 (0.12 %) | – | – | – | – | – | – |
+| dq8-asym-tensor: uint8 per-tensor + DequantizeLinear (default ORT options) | 69.8 | 2.96 | 0.0574 | 4.1e-04 | 0.56 % | 1.33 (0.11 %) | – | – | – | – | – | – |
+| mix-A: 4-bit encoder stack 3, 8-bit rest (MatMulNBits, block 32) | 62.7 | 2.83 | 0.0439 | 1.9e-04 | 0.29 % | 0.0046 (0.00 %) | 0.046 (mean 0.0033) / 0.358 (mean 0.0022) / 0.217 (mean 0.0011) | 360 (+8 %) / 232 (+8 %) / 165 (+6 %) | 0.54 | 289 / 561 | SURVIVES | – |
+| mix-B: 4-bit for the least sensitive 150 MB of fp32 weights, 8-bit rest | 59.0 | 3.69 | 0.0517 | 4.1e-04 | 0.43 % | 0.00305 (0.00 %) | 0.079 (mean 0.0040) / 0.366 (mean 0.0029) / 0.278 (mean 0.0015) | 354 (+6 %) / 229 (+7 %) / 165 (+5 %) | 0.54 | 285 / 561 | SURVIVES | – |
+| mix-C: 4-bit for the least sensitive 200 MB, 8-bit rest | 52.3 | 3.8 | 0.0768 | 9.9e-04 | 0.74 % | 0.00293 (0.00 %) | 0.106 (mean 0.0061) / 0.476 (mean 0.0039) / 0.538 (mean 0.0022) | 343 (+3 %) / 222 (+4 %) / 162 (+2 %) | 0.55 | 279 / 555 | SURVIVES | FAIL / FAIL |
+| nb4-sym-b32: 4-bit weights, MatMulNBits, block 32 | 46.0 | 8.06 | 0.355 | 8.4e-03 | 2.58 % | 0.00144 (0.00 %) | – | – | – | – | – | – |
+| nb4-sym-b128: 4-bit weights, block 128 | 40.9 | 19.9 | 0.433 | 1.2e-02 | 3.04 % | 0.00292 (0.00 %) | – | – | – | – | – | – |
+| s8-minmax: static int8 (QDQ, per-channel weights, fixed activation scales, MinMax calibration) | 71.8 | 7.77 | 0.525 | 2.1e-02 | 4.00 % | 4.14 (2.22 %) | – | – | – | – | – | – |
+
+Load of fp32 through PRONUNCIADA_BACKBONE (`fp32-file`): 0.61 s; fp32 with the pre-optimized graph (the default when this was measured; now `PRONUNCIADA_PREOPT=1`): 0.52 s.
+<!-- /opt:ondevice-candidates -->
+
+### Full gate, budget rule and strict rule
+
+<!-- opt:ondevice-gate -->
+**nb8-sym-b128** (73.4 MB) against the fp32 baseline (cbc6d6a, same suite and audit plans): **budget rule FAIL** (12 failing checks), strict rule FAIL (15 failing checks). 249 of 416 rows moved (140 worse, 109 better). Paired p < 0.05 on 6 of 361 rows (expected by chance 18.1); worse and p < 0.05 on 3 (expected 9.0). speechocean762 correlations: individual sounds +0.0008, words +0.0011, sentence accuracy +0.0007, sentence fluency +0.0003, sentence prosodic (intonation) +0.0006, sentence total +0.0008. Suite 2623 s.
+
+| rule | failing check |
+|---|---|
+| strict only (listed) | OMPAL · zh · sentence prosody: significantly worse than the baseline (paired, p = 0.043, delta -0.0015 [-0.0027, -0.0001]) |
+| budget | tone swaps · zh · right word blamed: Azure tally class behind (not significant) -> behind (significant) |
+| budget | swap benchmark · zh · native false alarms: native false alarms rise by 0.11 points (> 0.1) |
+| budget | swap benchmark · zh · native false alarms: Azure tally class ahead (significant) -> ahead (not significant) |
+| budget | swap benchmark · ja · native false alarms: native false alarms rise by 0.10 points (> 0.1) |
+| budget | swap benchmark · ja · native false alarms: Azure tally class behind (not significant) -> behind (significant) |
+| strict only (listed) | swap benchmark · ja · native false alarms: significantly worse than the baseline (paired, p = 0.046, delta +0.0010 [+0.0003, +0.0021]) |
+| strict only (listed) | swap benchmark · de · far AUC: significantly worse than the baseline (paired, p = 0.048, delta -0.0001 [-0.0003, -0.0000]) |
+| budget | cv-real test A · en · en/A: Azure tally class ahead (significant) -> ahead (not significant) |
+| budget | cv-real test A · es · es/A: detection AUC drops by 0.0037 (> 0.002) |
+| budget | cv-real test B · de · de/B: detection AUC drops by 0.0031 (> 0.002) |
+| budget | natives accepted · it · sentences accepted: native acceptance falls by 0.25 points (> 0.1) |
+| budget | coaching tips on natives · fr · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+| budget | coaching tips on natives · it · clips with a pronunciation tip: native false alarms rise by 0.40 points (> 0.1) |
+| budget | coaching tips on natives · ko · clips with a pronunciation tip: native false alarms rise by 0.40 points (> 0.1) |
+
+Rows that moved, by area (worse / better); every row with its values, delta, paired p and class is in `results/tables/opt_gate_nb8-sym-b128.json` (`moved`):
+
+| area | worse | better |
+|---|--:|--:|
+| OMPAL | 6 | 0 |
+| coaching | 2 | 2 |
+| coaching (features) | 0 | 3 |
+| coaching (heard) | 2 | 0 |
+| coaching tips on learners (ompal) | 2 | 0 |
+| coaching tips on learners (speechocean762) | 2 | 0 |
+| coaching tips on natives | 8 | 5 |
+| contrast audit | 66 | 43 |
+| cv-real test A | 5 | 6 |
+| cv-real test B | 1 | 1 |
+| learner errors | 1 | 1 |
+| length | 3 | 5 |
+| natives accepted | 10 | 10 |
+| planted errors | 13 | 7 |
+| speechocean762 | 0 | 6 |
+| swap benchmark | 18 | 18 |
+| tone swaps | 1 | 2 |
+
+**mix-C** (52.3 MB) against the fp32 baseline (cbc6d6a, same suite and audit plans): **budget rule FAIL** (18 failing checks), strict rule FAIL (18 failing checks). 286 of 416 rows moved (146 worse, 140 better). Paired p < 0.05 on 7 of 361 rows (expected by chance 18.1); worse and p < 0.05 on 0 (expected 9.0). speechocean762 correlations: individual sounds +0.0028, words +0.0034, sentence accuracy +0.0035, sentence fluency +0.0005, sentence prosodic (intonation) +0.0009, sentence total +0.0019. Suite 2338 s.
+
+| rule | failing check |
+|---|---|
+| budget | swap benchmark · zh · far right word: Azure tally class ahead (not significant) -> behind (not significant) |
+| budget | swap benchmark · it · native false alarms: native false alarms rise by 0.12 points (> 0.1) |
+| budget | swap benchmark · pt · far right word: Azure tally class ahead (significant) -> ahead (not significant) |
+| budget | swap benchmark · ko · far AUC: Azure tally class ahead (not significant) -> level |
+| budget | swap benchmark · ko · far right word: Azure tally class ahead (not significant) -> level |
+| budget | cv-real test A · en · en/A: detection AUC drops by 0.0069 (> 0.002) |
+| budget | cv-real test A · en · en/A: Azure tally class ahead (significant) -> ahead (not significant) |
+| budget | cv-real test A · zh · zh-TW/A: detection AUC drops by 0.0025 (> 0.002) |
+| budget | cv-real test A · ja · ja/A: detection AUC drops by 0.0039 (> 0.002) |
+| budget | cv-real test A · ja · ja/A: Azure tally class behind (not significant) -> behind (significant) |
+| budget | cv-real test B · de · de/B: detection AUC drops by 0.0027 (> 0.002) |
+| budget | cv-real test A · ru · ru/A: detection AUC drops by 0.0026 (> 0.002) |
+| budget | coaching tips on natives · en · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+| budget | coaching tips on natives · fr · clips with a pronunciation tip: native false alarms rise by 2.00 points (> 0.1) |
+| budget | coaching tips on natives · de · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+| budget | coaching tips on natives · it · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+| budget | coaching tips on natives · ru · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+| budget | coaching tips on natives · ko · clips with a pronunciation tip: native false alarms rise by 0.80 points (> 0.1) |
+
+Rows that moved, by area (worse / better); every row with its values, delta, paired p and class is in `results/tables/opt_gate_mix-C.json` (`moved`):
+
+| area | worse | better |
+|---|--:|--:|
+| OMPAL | 0 | 6 |
+| coaching | 0 | 4 |
+| coaching (features) | 1 | 2 |
+| coaching (heard) | 1 | 1 |
+| coaching tips on learners (ompal) | 3 | 0 |
+| coaching tips on learners (speechocean762) | 2 | 1 |
+| coaching tips on natives | 11 | 7 |
+| contrast audit | 82 | 50 |
+| cv-real test A | 7 | 3 |
+| cv-real test B | 1 | 1 |
+| learner errors | 0 | 2 |
+| length | 1 | 9 |
+| natives accepted | 5 | 14 |
+| planted errors | 9 | 11 |
+| speechocean762 | 0 | 6 |
+| swap benchmark | 23 | 20 |
+| tone swaps | 0 | 3 |
+
+Notes on the failing checks:
+- Several class changes are on rows that sat at the significance boundary in fp32 itself, for example zh tone swaps 'right word blamed' at p = 0.08 and en cv-real A. A move of a few items changes their class.
+- For two row families the 0.1-point false-alarm tolerance is finer than the row can resolve. On 'natives accepted, sentences' (400 clips) one clip is 0.25 point, and on 'coaching tips on natives' (250 clips) one clip is 0.4 point. Any change of a single clip fails these 20 rows under both rules.
+- For comparison, the float16-storage fp32 model (132 MB; posteriors within 0.05 nats of fp32) failed the strict gate on one paired row and nothing else, so it passes the budget rule. The shipped int8 fails the budget rule on 47 checks.
+<!-- /opt:ondevice-gate -->
+
+### Why the shipped int8 fails: fixed thresholds or ranking
+
+<!-- opt:ondevice-rows -->
+This is the int8 baseline against the fp32 baseline (both at cbc6d6a), re-run with both rules
+(`$PRONUNCIADA_CACHE/opt/results/int8_vs_fp32.json`). The rows are classified by
+`python -m bench.opt.row_kinds`:
+- A **fixed-threshold** row counts scores on one side of a constant fitted on fp32 outputs: native
+  false alarms below 0.6, natives accepted at P >= 0.5, coaching tips and precision at the shipped
+  sensitivity thresholds, and length native word acceptance.
+- A **ranking** row depends only on the order of scores: Pearson, AUC, hit rate at the run's own
+  5 % native quantile, and "right word".
+
+| | fixed-threshold rows | ranking rows | total |
+|---|--:|--:|--:|
+| fail under the budget rule | 27 | 16 | 43 |
+| fail only under the strict rule (significant, inside tolerance) | 2 | 6 | 8 |
+| **failing rows** (59 failing checks) | **29** | **22** | **51** |
+
+**Fixed-threshold rows, 27 of them failing the budget rule:**
+- swap-benchmark native false alarms in 7 languages;
+- natives' words or sentences accepted, 11 rows;
+- native coaching tips in 8 languages;
+- the Japanese length native word acceptance.
+
+These would move if int8 only shifted its scores, and a calibration refitted on the int8 outputs
+could address them.
+
+**Ranking rows, 16 of them failing the budget rule:**
+- cv-real AUC, 7 rows, down 0.0035 to 0.0124;
+- speechocean762 sentence accuracy -0.0033 and total -0.0024;
+- EpaDB -0.0045;
+- OMPAL word any error and tone-only;
+- swap far AUC and far right word (ko, zh);
+- zh tone right word.
+
+These are real losses of ordering, and recalibration cannot recover them.
+
+Across the 361 paired rows, 18 have p < 0.05 where 18.1 are expected by chance. Of these, 12 are
+worse where 9.0 are expected. The significant moves are therefore only slightly more than chance;
+the gate fails mainly on tolerance breaches.
+
+**Answer:** about 57 % of int8's failing rows (29 of 51) are fixed-threshold rows and 43 % are
+ranking rows. Refitting the calibration for int8 would address roughly 30 of the 51 rows. It would
+not address the 16 ranking rows that break the budget, and nothing was refitted. The weight-only
+candidates below keep the ordering much closer to fp32.
+<!-- /opt:ondevice-rows -->
+
+### Total size on the device
+
+<!-- opt:ondevice-size -->
+Total on device = backbone file + the language's scoring bundle (`results/tables/mobile_bundles.json`) + the ONNX Runtime library. The library sizes are not measured on a phone; see the table after this one.
+
+Backbone + bundle, MB (library not included):
+
+| lang | bundle MB | fp32 | int8-dyn | nb8-sym-b128 | dq8-sym-ch | mix-A | mix-B | mix-C |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| en | 4.6 | 264.9 | 75.3 | 78.1 | 75.1 | 67.4 | 63.7 | 57.0 |
+| de | 3.6 | 263.9 | 74.3 | 77.1 | 74.1 | 66.4 | 62.7 | 55.9 |
+| es | 3.9 | 264.2 | 74.6 | 77.4 | 74.4 | 66.7 | 63.0 | 56.2 |
+| fr | 1.1 | 261.4 | 71.8 | 74.5 | 71.6 | 63.8 | 60.1 | 53.4 |
+| it | 1.9 | 262.2 | 72.6 | 75.4 | 72.4 | 64.7 | 61.0 | 54.3 |
+| pt | 3.6 | 263.8 | 74.2 | 77.0 | 74.0 | 66.3 | 62.6 | 55.9 |
+| ru | 4.1 | 264.4 | 74.8 | 77.6 | 74.6 | 66.9 | 63.2 | 56.5 |
+| ja | 2.4 | 262.7 | 73.1 | 75.9 | 72.9 | 65.1 | 61.4 | 54.7 |
+| ko | 3.6 | 263.9 | 74.3 | 77.1 | 74.1 | 66.3 | 62.6 | 55.9 |
+| zh | 4.2 | 264.5 | 74.9 | 77.6 | 74.7 | 66.9 | 63.2 | 56.5 |
+
+ONNX Runtime library (a phone app ships one of these):
+
+| build | MB | source |
+|---|--:|---|
+| macOS arm64 desktop, onnxruntime 1.32.0 wheel, libonnxruntime.dylib | 33.6 | measured here |
+| Android, pre-built onnxruntime-android AAR 1.18.0 (all ABIs, full operator set) | 24.4 | quoted: ONNX Runtime custom-build documentation example |
+| Android, custom reduced-operator AAR 1.18.0 (same example) | 7.5 | quoted, same source |
+| Android arm64, onnxruntime-mobile 1.11 libonnxruntime.so | 3.3 | quoted: ONNX Runtime 1.11 mobile docs |
+| iOS, onnxruntime-mobile-c 1.11 static library | 22.0 | quoted: ONNX Runtime 1.11 mobile docs (static, before linking) |
+| Web, ort-wasm-simd-threaded.wasm | 10.6 | quoted: hosted copies of onnxruntime-web, 10 to 12.3 MB |
+
+MatMulNBits is an ONNX Runtime contrib operator (com.microsoft domain). The pre-built mobile and web packages include contrib operators; a reduced-operator build must list MatMulNBits (and, for the DequantizeLinear candidates, DequantizeLinear) in its operator configuration. Not verified on a phone.
+<!-- /opt:ondevice-size -->
+
+### Recommendation
+
+<!-- opt:ondevice-recommendation -->
+**For a phone: the 8-bit-weight model `nb8-sym-b128` (73.4 MB, MatMulNBits, symmetric, block 128,
+fp32 compute), with the caveat that it does not pass the budget rule as written (12 failing checks).
+Adopt nothing until the user has decided on those checks.**
+
+Why this one:
+- **Closest to fp32 at about 70 MB.**
+  - Mean posterior change 0.027 nats and 0.19 % of frames with a different top token; the shipped
+    int8 gives 0.42 nats and 2.7 %.
+  - Mean word-probability change 0.0018; int8 gives 0.0084.
+  - speechocean762 correlations all slightly higher (+0.0003 to +0.0011).
+  - Paired p < 0.05 on 6 of 361 rows, fewer than the 18 expected by chance.
+- **Stable.** A 1e-4 feature change moves it as much as fp32 (0.004 nats); int8 moves 3.5 nats.
+- **Memory and size.** Half the memory of fp32 after load (300 MB against 471 MB); 571 MB after 10
+  clips against 774. Backbone plus language bundle is 74.5 to 78.1 MB.
+- **Cost.** 7 to 10 % slower than fp32 on this laptop (p50 169 ms against 157 ms at 4 threads for
+  about 10 s of audio). The shipped int8 is 18 to 32 % faster than fp32, but it is also the least
+  accurate and the most fragile.
+
+What it fails, and why it may matter less than it looks:
+- **Four Azure-tally class changes.** They are on rows that sat at the significance boundary in fp32:
+  zh tone "right word blamed" at p = 0.08, en cv-real A, and the zh and ja native false alarms.
+- **Two cv-real AUC drops of 0.003 to 0.004** (es A, de B).
+- **Rows finer than their own resolution.** Native false alarms rise 0.10 to 0.11 point on zh / ja.
+  Five checks are on rows where one clip is above the 0.1-point tolerance: one Italian sentence of
+  400, and one or two of 250 native-tip clips in fr / it / ko.
+- **Decision for the user:** accept these with the list documented, or refine the budget rule
+  before applying it. For example, a tolerance of at least one item per row, and class changes
+  counted only when the paired test also says worse.
+
+Size on a phone (backbone + bundle + ONNX Runtime library, MB):
+
+| | nb8-sym-b128 | shipped int8 | mix-B (not gated) |
+|---|--:|--:|--:|
+| backbone + bundle | 74.5–78.1 | 71.8–75.3 | 60.1–63.7 |
+| + Android custom reduced-operator AAR (7.5, quoted 1.18) | 82–86 | 79–83 | 68–71 |
+| + Android pre-built AAR (24.4, quoted 1.18, all ABIs) | 99–102 | 96–100 | 85–88 |
+| + iOS onnxruntime-mobile-c static (22, quoted 1.11) | 97–100 | 94–97 | 82–86 |
+| + web wasm (10.6, quoted) | 85–89 | 82–86 | 71–74 |
+
+None of these library sizes was measured on a phone. A reduced-operator build must include the
+MatMulNBits contrib operator.
+
+The other candidates:
+- **mix-C (52.3 MB)** fails the budget rule on 18 checks. It loses AUC on cv-real (A: en, zh-TW, ja, ru; B: de),
+  en by 0.0069, although no paired test says worse. It is 2 to 3 % slower than fp32 and the smallest
+  stable model. For a hard 60 MB limit, **mix-B (59.0 MB)** and **mix-A (62.7 MB)** are the next
+  candidates for a full gate. Their posterior error is between nb8 and mix-C.
+- **nb8-sym-b32 (77.8 MB)** has the lowest error of all and survives the screen, but was not gated.
+  It is 4 MB larger than block 128 and 2 to 3 % slower.
+- **Weight-only per-channel int8 with DequantizeLinear** (70.5 MB) runs at fp32 speed only with
+  `session.disable_quant_qdq=1`. Without that option ONNX Runtime turns it back into the fragile
+  dynamic int8. It keeps fp32 memory and was discarded by the screen (zh far AUC sample). Not
+  recommended.
+- **Static int8 and all-4-bit** are too lossy. Static int8 is also fragile.
+
+Before any of this ships, two things would make the choice firmer:
+- a full gate of mix-B and of nb8-sym-b32;
+- a measurement on a real phone of latency, memory and the size of a reduced ONNX Runtime build
+  that includes MatMulNBits.
+<!-- /opt:ondevice-recommendation -->

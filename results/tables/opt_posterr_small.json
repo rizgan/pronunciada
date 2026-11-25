@@ -1,0 +1,175 @@
+{
+ "kind": "opt_posterr",
+ "date": "2026-11-23 11:18",
+ "n_clips": 200,
+ "results": {
+  "mix-A": {
+   "file": "model.onnx",
+   "bytes": 62724271,
+   "load_s": 0.241,
+   "vs_fp32": {
+    "max_abs_dlogp": 2.8296146392822266,
+    "mean_abs_dlogp": 0.043930318468529087,
+    "mean_kl": 0.0001888848041109233,
+    "max_kl": 0.5993016326776133,
+    "p999_kl": 0.01992737128740517,
+    "top_token_changed_share": 0.0028980550630461977,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 0.004596233367919922,
+     "mean_abs_dlogp": 2.9778006540005183e-05,
+     "top_token_changed_share": 0.0
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 0.013754844665527344,
+     "mean_abs_dlogp": 8.902718762679595e-05,
+     "top_token_changed_share": 0.0
+    }
+   ]
+  },
+  "mix-B": {
+   "file": "model.onnx",
+   "bytes": 59027119,
+   "load_s": 0.253,
+   "vs_fp32": {
+    "max_abs_dlogp": 3.6921454668045044,
+    "mean_abs_dlogp": 0.051681711509911896,
+    "mean_kl": 0.00040690114844442053,
+    "max_kl": 1.5889308351889202,
+    "p999_kl": 0.0398796212251186,
+    "top_token_changed_share": 0.0042930815685498025,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 0.0030450820922851562,
+     "mean_abs_dlogp": 2.9458568595521332e-05,
+     "top_token_changed_share": 0.0
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 0.009157657623291016,
+     "mean_abs_dlogp": 8.811164474852853e-05,
+     "top_token_changed_share": 0.0
+    }
+   ]
+  },
+  "mix-C": {
+   "file": "model.onnx",
+   "bytes": 52317871,
+   "load_s": 0.254,
+   "vs_fp32": {
+    "max_abs_dlogp": 3.8027877807617188,
+    "mean_abs_dlogp": 0.07683315004734269,
+    "mean_kl": 0.0009906792866791368,
+    "max_kl": 1.639294565889527,
+    "p999_kl": 0.0842484189002212,
+    "top_token_changed_share": 0.007425141077680476,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 0.002925872802734375,
+     "mean_abs_dlogp": 3.0193167712663134e-05,
+     "top_token_changed_share": 0.0
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 0.008729934692382812,
+     "mean_abs_dlogp": 9.016830060543138e-05,
+     "top_token_changed_share": 0.0
+    }
+   ]
+  },
+  "nb4-sym-b32": {
+   "file": "model.onnx",
+   "bytes": 46008683,
+   "load_s": 0.286,
+   "vs_fp32": {
+    "max_abs_dlogp": 8.059412002563477,
+    "mean_abs_dlogp": 0.3549404211839101,
+    "mean_kl": 0.008393033420602125,
+    "max_kl": 2.505656561077996,
+    "p999_kl": 0.35724415168534823,
+    "top_token_changed_share": 0.025758489411298813,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 0.0014350414276123047,
+     "mean_abs_dlogp": 3.06263046325326e-05,
+     "top_token_changed_share": 0.0
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 0.00444340705871582,
+     "mean_abs_dlogp": 9.123889205531488e-05,
+     "top_token_changed_share": 0.0
+    }
+   ]
+  },
+  "nb4-sym-b128": {
+   "file": "model.onnx",
+   "bytes": 40853091,
+   "load_s": 0.272,
+   "vs_fp32": {
+    "max_abs_dlogp": 19.863492965698242,
+    "mean_abs_dlogp": 0.4331744711248625,
+    "mean_kl": 0.012038519059349351,
+    "max_kl": 2.893521012948447,
+    "p999_kl": 0.6358804545366583,
+    "top_token_changed_share": 0.030366576964962335,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 0.0029234886169433594,
+     "mean_abs_dlogp": 3.1295561000493575e-05,
+     "top_token_changed_share": 0.0
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 0.008858203887939453,
+     "mean_abs_dlogp": 9.258672383267464e-05,
+     "top_token_changed_share": 0.0
+    }
+   ]
+  },
+  "s8-minmax": {
+   "file": "model.onnx",
+   "bytes": 71785793,
+   "load_s": 0.438,
+   "vs_fp32": {
+    "max_abs_dlogp": 7.769514083862305,
+    "mean_abs_dlogp": 0.5248413522653539,
+    "mean_kl": 0.02125529702218944,
+    "max_kl": 3.5434792707683798,
+    "p999_kl": 0.7803037873723698,
+    "top_token_changed_share": 0.03996075925442583,
+    "frames": 111109
+   },
+   "fragility": [
+    {
+     "eps": 0.0001,
+     "max_abs_dlogp": 4.143735647201538,
+     "mean_abs_dlogp": 0.4449260074999078,
+     "top_token_changed_share": 0.022175692395545826
+    },
+    {
+     "eps": 0.0003,
+     "max_abs_dlogp": 3.9274978637695312,
+     "mean_abs_dlogp": 0.45242072239854586,
+     "top_token_changed_share": 0.025411630341676976
+    }
+   ]
+  }
+ }
+}

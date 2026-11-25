@@ -2,7 +2,7 @@
 
 Modules: `pronunciada/text/zh.py`, `ja.py`, `ko.py`, shared helpers `pronunciada/text/_cjk_common.py`,
 hand-written tables in `pronunciada/data/cjk/`. Tests: `tests/test_text_cjk_{zh,ja,ko}.py` (offline).
-Runtime packages: `requirements-text-cjk.txt`.
+Runtime packages: `requirements/text-cjk.txt`.
 
 ## Provenance and licenses
 
@@ -16,14 +16,20 @@ Runtime packages: `requirements-text-cjk.txt`.
 | ├ dictionary (NAIST-jdic + UniDic-derived entries) | lexicon + accent types | BSD-3 (NAIST); UniDic under its BSD-3 option |
 | ├ Unihan kJapanese map, CJKVI variants map | unknown-kanji fallbacks | Unicode-3.0, MIT |
 | ├ HTS voice "Mei" (shipped in the wheel, **not used**) | TTS only | CC-BY-3.0 |
-| sudachipy 0.7.0 + sudachidict-core (dependency of pyopenjtalk-plus) | kanji reading disambiguation inside pyopenjtalk-plus | Apache-2.0 |
+| sudachipy 0.7.0 + sudachidict-core (dependency of pyopenjtalk-plus) | **not used**: installed by pyopenjtalk-plus, never loaded (may be uninstalled) | Apache-2.0 |
 | pydantic / pydantic-core / annotated-types / typing-inspection | dependencies of pyopenjtalk-plus | MIT |
 | `data/cjk/zh_neutral.txt`, `data/cjk/zh_tw_tones.txt` | neutral-tone words, Taiwan tone variants | written for pronunciada (Apache-2.0 with the project) |
 | Korean rules, number readings, all ZIPA mapping tables | in-house code | project license |
 
 No GPL code or data is imported at runtime. Original `pyopenjtalk` has no macOS-arm64/py3.12 wheel
 (source build needs a compiler; it failed here), so `pyopenjtalk-plus` (same API, prebuilt wheels,
-bundled dictionary) is used. Its footprint is large (~110 MB package + ~190 MB SudachiDict).
+bundled dictionary) is used. Its own footprint is ~112 MB (103 MB Open JTalk dictionary); the
+~200 MB of sudachipy + sudachidict-core it pulls in are unused (below) and can be uninstalled.
+
+Two layers (docs/TEXT_LAYERS.md): everything after the reading (moras -> phones for Japanese, tone
+rules and pinyin -> phones for Mandarin, all of Korean) is layer 1, rules only, in
+`pronunciada/reading/` and `pronunciada/text/ko.py`; the packages above are layer 2 and only find the
+reading. `pronunciada.phones_from_kana` / `phones_from_pinyin` take a reading directly.
 Data for tuning: FLEURS validation split (CC-BY-4.0), dev only.
 
 ## Method
@@ -41,6 +47,10 @@ Conventions were tuned against ZIPA (`zipa-small-crctc-500k`) greedy output on F
 
 ## Mandarin
 
+- Layer 1 / layer 2 split: jieba (words), pypinyin (readings, polyphones), OpenCC (script),
+  the neutral-tone word list and the 子 / 们 / 得 / 地 neutral rules find the reading (layer 2,
+  `text/zh.py`); 一 / 不 sandhi, third-tone sandhi, the reduplication and Taiwan tone alternatives,
+  erhua and pinyin -> phones are layer 1 (`reading/zh.py`), shared with `phones_from_pinyin`.
 - Script: the whole prompt is converted with OpenCC `t2s` (length-preserving; per-character
   fallback), then everything runs on Simplified. `text` fields keep the user's script; number
   readings are shown in the user's script. Taiwan-standard 著 (= 着) is mapped back to 着 except
@@ -76,7 +86,22 @@ Conventions were tuned against ZIPA (`zipa-small-crctc-500k`) greedy output on F
 ## Japanese
 
 - pyopenjtalk-plus `run_frontend` + `make_label`; per-mora consonant/vowel, devoicing (capital
-  vowels) from the labels. (Until round 15 a per-mora high/low pitch label was also derived from
+  vowels) from the labels. Every `run_frontend` option is written out (`FRONTEND_OPTIONS` in
+  `text/ja.py`): the package defaults (the "nani" reading model and the rule-based post-processing
+  stay on) except `use_sudachi_kanji_yomi=False`. The unknown-kanji step, which would tokenise the
+  sentence with Sudachi for a kanji missing from Open JTalk's dictionary, gets no sentence text during
+  our call and uses its Unihan per-character readings. So the Sudachi dictionary is never loaded, and
+  the front-end also works with sudachipy and sudachidict-core uninstalled (it then registers
+  placeholder modules for the duration of `import pyopenjtalk` only). Effect on practice text
+  (5,076 sentences: FLEURS train + validation, Common Voice dev half): 25 of 75,334 words change
+  reading (0.033 %, 25 sentences = 0.49 %); by our reading of the 25, Sudachi was right in 6, Open
+  JTalk in 13, 5 are the same sound written イ / ウ instead of ー, 1 unclear. Full quality gate:
+  pass, only Japanese rows moved (largest +0.009 / -0.0002).
+- Kana input (layer 1, `pronunciada/reading/ja.py`): the same moras -> phones builder on a kana
+  reading; Open JTalk's devoicing marks (’) in its `pron` agree with its labels on every mora of the
+  practice text (7,336 devoiced, 0 disagreements), so pronunciation kana with marks reproduces the
+  dictionary path exactly (99.98 % of words; the rest: label / kana mismatches inside Open JTalk,
+  Latin runs, a pause inside one written token). Numbers in kana input must be written in kana. (Until round 15 a per-mora high/low pitch label was also derived from
   the accent fields; pitch accent is no longer scored and the label was removed.)
 - Units: mora, except ZIPA conventions force two merges: っ joins the **following** mora (doubled
   consonant kk / tt / ss / ʃʃ / ttʃ / tts; alt single consonant) - this can put the geminate into

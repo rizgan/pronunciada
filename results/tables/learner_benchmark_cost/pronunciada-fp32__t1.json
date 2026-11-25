@@ -1,0 +1,26 @@
+{
+ "system": "pronunciada-fp32",
+ "threads": 1,
+ "n_clips": 200,
+ "audio_seconds": 680.327,
+ "mean_clip_seconds": 3.401635,
+ "load_s": 0.5396959781646729,
+ "cold_start_s": 0.7749888896942139,
+ "p50_s": 0.1577189170056954,
+ "p95_s": 0.24164282314595756,
+ "mean_s": 0.16286921543942298,
+ "rtf": 0.04787968592733288,
+ "rtf_median": 0.04729841327854652,
+ "peak_rss_mb": 511.5,
+ "weights_mb": 296.757403,
+ "weight_files": [
+  {
+   "file": "model.onnx",
+   "mb": 260.3
+  }
+ ],
+ "machine": "Apple M3 Pro",
+ "load_avg_1min_before": 10.33447265625,
+ "load_avg_1min_after": 11.11279296875,
+ "date": "2026-11-23 14:32"
+}

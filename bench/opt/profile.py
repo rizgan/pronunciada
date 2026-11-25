@@ -330,7 +330,7 @@ def first_load(configs: list[dict], lang: str, threads: int, rounds: int = 3, lo
     created and their sizes."""
     import shutil
 
-    from .common import MODEL, cache_root
+    from .common import MODEL, cache_root, default_backbone
 
     real = cache_root()
     out = {"kind": "opt_first_load", "date": time.strftime("%Y-%m-%d %H:%M"), "machine": machine(), "lang": lang,
@@ -341,8 +341,9 @@ def first_load(configs: list[dict], lang: str, threads: int, rounds: int = 3, lo
         try:
             md = tmp / "models" / MODEL
             md.mkdir(parents=True)
-            for f in ("model.onnx", "model.int8.onnx", "tokens.txt"):
-                (md / f).symlink_to(real / "models" / MODEL / f)
+            for f, src in (("model.onnx", default_backbone("fp32")), ("model.int8.onnx", default_backbone("int8")),
+                           ("tokens.txt", real / "models" / MODEL / "tokens.txt")):
+                (md / f).symlink_to(src)
             (tmp / "data").symlink_to(real / "data")
             clip = practice_clips([lang], 1)[0]
             old = os.environ.get("PRONUNCIADA_CACHE")

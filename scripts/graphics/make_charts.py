@@ -2,12 +2,13 @@
 
     python scripts/graphics/make_charts.py
 
-Outputs docs/assets/chart-english.png, chart-detection.png, chart-languages.png, chart-zipa.png and chart-tally.png (920 px wide,
+Outputs docs/assets/chart-english.png, chart-languages.png, chart-zipa.png and chart-tally.png (920 px wide,
 2x, so the lettering stays readable at README width). Every number is read from the scoreboard tables, which `python -m bench.scoreboard`
 generates from results/tables/*.json, so the charts cannot drift from the published results.
 """
 from __future__ import annotations
 
+import math
 import re
 
 from common import INK, ROOT, font_css, render
@@ -214,6 +215,36 @@ def dumbbell(rows, lo=0.86, hi=1.0, ticks=(.86, .88, .90, .92, .94, .96, .98, 1.
     return "".join(o)
 
 
+def speed() -> tuple[float, float, float]:
+    """English row of the scoreboard's long-clip table: (Pronunciada seconds, Azure seconds, clip length in seconds)."""
+    row = next(r for r in table("Longer clips next to Azure") if r[0] == "en")
+    ours = re.match(r"(\d+) ms \((\d+\.\d+) s\)", row[1])
+    azure = re.match(r"(\d+\.\d+) s", row[2])
+    return int(ours.group(1)) / 1000, float(azure.group(1)), float(ours.group(2))
+
+
+def speed_bars(ours: float, azure: float, label_w: int = 150):
+    pw = W - 80
+    x0, x1 = label_w, pw - 90
+    hi = math.ceil(azure * 2) / 2
+    sx = lambda v: x0 + v / hi * (x1 - x0)
+    pitch, bh = 54, 22
+    h = 2 * pitch + 34
+    o = [f'<svg class="plot" xmlns="http://www.w3.org/2000/svg" width="{pw}" height="{h}">']
+    t = 0.0
+    while t <= hi + 1e-9:
+        o.append(f'<line x1="{sx(t):.1f}" y1="0" x2="{sx(t):.1f}" y2="{h - 30}" stroke="{RULE}"/>')
+        o.append(f'<text class="tick" x="{sx(t):.1f}" y="{h - 10}" text-anchor="middle">{t:g} s</text>')
+        t += 0.5
+    for i, (name, v, col, fill) in enumerate((("Pronunciada", ours, OURS, "#fff"), ("Azure", azure, THEIRS, "#b4b4bb"))):
+        y = i * pitch + 14
+        o.append(f'<text class="lab" x="0" y="{y + bh - 5}">{name}</text>')
+        o.append(f'<rect x="{x0}" y="{y}" width="{sx(v) - x0:.1f}" height="{bh}" rx="2" fill="{col}"/>')
+        o.append(f'<text class="val" x="{sx(v) + 10:.1f}" y="{y + bh - 6}" fill="{fill}">{v:.2f} s</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
 def height(n_rows: int, pitch: int, extra: int) -> int:
     return 36 + 26 + 26 + n_rows * pitch + extra
 
@@ -226,23 +257,25 @@ if __name__ == "__main__":
                 "Pearson correlation with expert scores, higher is better. speechocean762 test set: 2,500 recordings, "
                 f"125 speakers. Lines show 95% confidence intervals. {star}"),
            out / "chart-english.png", W, height(len(e), 64, 34 + 112))
-    d = detection()
-    render(page("Detecting mispronunciations", bars(d, chance=0.5),
-                "Area under the ROC curve for the phonemes or words that annotators marked wrong, higher is better. "
-                f"Held-out test sets; L2-ARCTIC and EpaDB were not used in training. Lines show 95% confidence intervals. {star}"),
-           out / "chart-detection.png", W, height(len(d), 64, 34 + 112))
     l = languages()
-    render(page("Ten languages: changed-word detection", dumbbell(l),
+    render(page("10 languages: changed-word detection", dumbbell(l),
                 "Native FLEURS test recordings, 150 per language, scored against a reference with one word replaced by a "
                 f"word one phoneme away. Area under the ROC curve for the replaced word, higher is better. Not a test on learner speech. {star}"),
            out / "chart-languages.png", W, height(len(l), 38, 40 + 112))
-    z = zipa()
+    keep = ("English phonemes, expert scores (r)", "English sentences, expert scores (r)", "English errors, L2-ARCTIC (AUC)", "Mandarin errors, tone (AUC)")
+    z = [r for r in zipa() if r["label"] in keep]
     render(page("What the project adds to ZIPA", bars(z, label_w=300),
                 "The same held-out learner tests, scored by Pronunciada and by the unmodified ZIPA model with the standard "
-                "goodness-of-pronunciation method: no adapters, no calibration, no tone or stress models. r = Pearson correlation "
-                f"with expert scores, AUC = area under the ROC curve for marked errors. Lines show 95% confidence intervals. {star}",
+                "goodness-of-pronunciation method. r = Pearson correlation with expert scores, AUC = area under the ROC curve "
+                f"for marked errors. Lines show 95% confidence intervals. {star}",
                 legend=((OURS, "Pronunciada"), (THEIRS, "ZIPA alone"))),
            out / "chart-zipa.png", W, height(len(z), 64, 34 + 112))
+    ours, azure, clip = speed()
+    render(page(f"Time to score a {clip:.0f}-second recording", speed_bars(ours, azure),
+                f"Lower is better. Medians over English FLEURS test recordings of about {clip:.0f} seconds. Pronunciada ran on the laptop with "
+                "one CPU thread. The Azure time is the whole request from the same laptop, upload included. The two systems were timed on "
+                "different recordings of similar length.", legend=()),
+           out / "chart-speed.png", W, 36 + 26 + 26 + 2 * 54 + 34 + 106)
     t = tally()
     total = [sum(r[k] for r in t) for k in (1, 2, 3, 4)]
     render(page("Head-to-head with Azure, by language", stacked(t),
@@ -251,4 +284,4 @@ if __name__ == "__main__":
                 "Learner speech with expert marks exists for English and Mandarin only; the other languages use native speech with altered prompts and Common Voice.",
                 legend=((OURS, "Pronunciada significantly ahead"), (THEIRS, "No significant difference"), (BEHIND, "Azure significantly ahead"))),
            out / "chart-tally.png", W, 36 + 26 + 34 + 26 + len(t) * 38 + 8 + 112)
-    print("wrote chart-english.png, chart-detection.png, chart-languages.png, chart-zipa.png, chart-tally.png")
+    print("wrote chart-english.png, chart-languages.png, chart-zipa.png, chart-speed.png, chart-tally.png")

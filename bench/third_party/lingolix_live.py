@@ -549,7 +549,7 @@ class Response:
 
 
 class RequestsTransport:
-    """The real one (requests, already in requirements-bench.txt)."""
+    """The real one (requests, already in requirements/bench.txt)."""
 
     def post(self, url: str, *, headers: dict, data: dict, file: tuple, timeout: float) -> Response:
         import requests

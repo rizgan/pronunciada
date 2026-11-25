@@ -85,9 +85,9 @@ def test_batch_matches_single(acoustic_model, tts):
 @pytest.mark.model
 @pytest.mark.parametrize("precision", ["fp16", "int8"])
 def test_quantised_models_agree(acoustic_model, tts, precision):
-    path = os.path.join(os.path.expanduser(os.environ.get("PRONUNCIADA_CACHE", "~/.cache/pronunciada")),
-                        "models", acoustic_model.name, f"model.{precision}.onnx")
-    if not os.path.exists(path):
+    from pronunciada.acoustic import model_cached
+
+    if not model_cached(acoustic_model.name, precision):
         pytest.skip(f"{precision} model not cached")
     wav = tts("I would like a cup of coffee with milk, please.")
     ref = acoustic_model.posteriors(wav)

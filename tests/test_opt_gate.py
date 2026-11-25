@@ -47,6 +47,25 @@ def test_significantly_worse_paired_fails_even_inside_tolerance():
     assert r["verdict"] == "FAIL" and "significantly worse" in r["fails"][0]["text"]
 
 
+def test_budget_rule_lists_significance_inside_tolerance():
+    r = decide([row(value=0.7)], [row(value=0.6995)], paired(0.7, 0.6995, p=0.01))
+    assert r["verdict"] == "FAIL" and r["verdict_budget"] == "PASS"
+    assert len(r["budget_listed"]) == 1 and not r["budget_fails"]
+    assert r["chance"]["rows_with_paired_p"] == 1 and r["chance"]["observed_worse_and_p_below_0.05"] == 1
+
+
+def test_budget_rule_still_fails_on_tolerances_and_classes():
+    r = decide([row(value=0.7)], [row(value=0.6979)], paired(0.7, 0.6979, p=0.5))
+    assert r["verdict"] == r["verdict_budget"] == "FAIL"
+    k = "swap benchmark|de|near AUC"
+    r = decide([row(k, 0.98, "detection_auc", cat="ahead (significant)")],
+               [row(k, 0.9799, "detection_auc", cat="ahead (not significant)")])
+    assert r["verdict_budget"] == "FAIL"
+    k = "length|ja|all word caught"
+    r = decide([row(k, 0.50, "rate")], [row(k, 0.499, "rate")])        # no paired test: strict only
+    assert r["verdict"] == "FAIL" and r["verdict_budget"] == "PASS"
+
+
 def test_significantly_better_passes():
     r = decide([row(value=0.7)], [row(value=0.7005)], paired(0.7, 0.7005, p=0.001))
     assert r["verdict"] == "PASS"

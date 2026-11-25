@@ -1,0 +1,26 @@
+{
+ "system": "openpronounce-student",
+ "threads": 4,
+ "n_clips": 200,
+ "audio_seconds": 680.327,
+ "mean_clip_seconds": 3.401635,
+ "load_s": 6.442292213439941,
+ "cold_start_s": 9.092264175415039,
+ "p50_s": 0.3137912289821543,
+ "p95_s": 0.45231811281410034,
+ "mean_s": 0.3182225126842968,
+ "rtf": 0.09354987019015762,
+ "rtf_median": 0.09385163227068087,
+ "peak_rss_mb": 1193.828125,
+ "weights_mb": 395.88943,
+ "weight_files": [
+  {
+   "file": "8143feb71b594346ef4de2688d80812cafda4086f84f61c4cafc775e37fc238a",
+   "mb": 378.7
+  }
+ ],
+ "machine": "Apple M3 Pro",
+ "load_avg_1min_before": 39.93212890625,
+ "load_avg_1min_after": 21.80126953125,
+ "date": "2026-11-23 14:34"
+}

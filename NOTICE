@@ -25,8 +25,8 @@ Shipped data files with their own licenses (pronunciada/data/lex; per-file list 
 
 Runtime text packages (optional extras, installed separately)
   pypinyin (MIT), jieba (MIT), opencc-python-reimplemented (Apache-2.0), pyopenjtalk-plus (MIT,
-  bundles Open JTalk / NAIST-jdic under BSD licenses), sudachipy + sudachidict-core (Apache-2.0).
-  num2words (LGPL-2.1+) is optional and only used to read out digits.
+  bundles Open JTalk / NAIST-jdic under BSD licenses). pyopenjtalk-plus also installs
+  sudachipy + sudachidict-core (Apache-2.0), which Pronunciada does not use.
 
 Models trained for this project (pronunciada/data; details per file in docs/LICENSING.md)
   Output adapters, stress models, attribute heads, length model: FLEURS (Google, CC BY 4.0).

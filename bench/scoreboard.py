@@ -350,7 +350,8 @@ def speed(L):
     L += ["## Speed, size, and what runs where", ""]
     if sp:
         L += [f"End-to-end `Scorer.score` on 100 speechocean762 clips (mean {sp['fp32_t4']['mean_audio_s']:.1f} s of audio), "
-              "laptop CPU (Apple M3 Pro), no other benchmark running (other processes kept the load average near 2), "
+              "laptop CPU (Apple M3 Pro), no other benchmark running (1-minute load average 3.0 at the start, other "
+              "processes included), "
               "posterior cache cleared per clip "
               "(`bench/eval_english.py --steps speed`):", "",
               "| model | 4 threads, median (p95) | 1 thread, median (p95) |", "|---|---|---|"]
@@ -360,7 +361,9 @@ def speed(L):
                 L.append(f"| {prec} | {a['median_ms']:.0f} ms ({a['p95_ms']:.0f}) | {b['median_ms']:.0f} ms ({b['p95_ms']:.0f}) |")
         mb = sp.get("model_mb", {})
         L += ["", f"Acoustic model download on first use: {mb.get('model.onnx', '–')} MB (fp32) or "
-              f"{mb.get('model.int8.onnx', '–')} MB (int8, `Scorer(lang, precision=\"int8\")`)."]
+              f"{mb.get('model.int8.onnx', '–')} MB (int8, `Scorer(lang, precision=\"int8\")`); MB = 10^6 bytes. "
+              "The model cache keeps one file per precision (the download with the extra encoder outputs declared, "
+              "the same size), so that is also the size on disk."]
     rows = []
     for lang in LANGS:
         b = (G.get("by_lang") or {}).get(lang)
@@ -375,9 +378,9 @@ def speed(L):
               "fleurs-swap clips):", "", "| lang | Pronunciada median (median audio) | Azure median (mean audio) |",
               "|---|---|---|"] + rows
     L += ["", "What runs where: everything runs on the device (numpy + ONNX Runtime, no network after the first "
-          "model download, no audio leaves the device). Shipped package data ≈ 21 MB (adapters, calibrators, tone / "
-          "stress / attribute models ≈ 10 MB; pronunciation dictionaries ≈ 10 MB). No phone build exists yet; nothing "
-          "has been timed on a phone.", ""]
+          "model download, no audio leaves the device). Shipped package data ≈ 36 MB (coaching models ≈ 13 MB; "
+          "pronunciation dictionaries ≈ 10 MB; adapters, calibrators, tone / stress models ≈ 11 MB; the rest ≈ 2 MB). "
+          "No phone build exists yet; nothing has been timed on a phone.", ""]
 
 
 def how_to_read(L):
@@ -527,8 +530,15 @@ def main():
     coach_tips(body)
     speed(body)
     head = ["# Pronunciada scoreboard", "",
-            "Every held-out number in one place, for the code on `main` (round 19 plus the round-20 Mandarin word step "
-            "and Korean / Japanese speed-up): the round-19 frozen run of 2026-11-22 (results/round19_integration.md) with "
+            "Every held-out number in one place, for the code on `main`: the round-20 code (commit fce7918) merged with "
+            "the learner benchmark, the size / CPU-speed work and the two-layer text front end (own number speller, "
+            "kana and pinyin input, one backbone file per precision in the model cache, no second Japanese "
+            "dictionary). The only scoring change in that merge is the removal of the second Japanese dictionary "
+            "(Sudachi): its Japanese rows come from one held-out run of that code on 2026-11-23 (18 table rows moved, "
+            "all Japanese, none failing the quality gate); every other language gives the outputs of the round-20 code (the "
+            "scoring targets of all 40,585 benchmark prompts are identical outside Japanese, and the backbone outputs "
+            "are identical under the new file layout). The round-20 code is round 19 plus the round-20 Mandarin word step "
+            "and Korean / Japanese speed-up: the round-19 frozen run of 2026-11-22 (results/round19_integration.md) with "
             "every Mandarin row re-run on that code the same day; the other nine languages give bitwise-identical outputs "
             "under it (results/round20_release_check.md). Plus the round-20 Spanish false-alarm fixes (number readings, "
             "glides), whose Spanish rows come from one held-out run on 2026-11-23; every other language is bitwise "

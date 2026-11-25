@@ -78,10 +78,13 @@ def wordmark(color: str, with_mark: bool = True) -> str:
             f'role="img" aria-label="Pronunciada">{sign}<g fill="{color}" transform="translate({shift:.0f} 0)">{paths}</g></svg>\n')
 
 
-def tile(background: str | None = "#0b0b0c", size: int = 100) -> str:
-    """The mark alone: on a rounded dark tile (favicon, profile picture) or, with background=None, in black."""
+def tile(background: str | None = "#0b0b0c", size: int = 100, big: bool = False) -> str:
+    """The mark alone: on a rounded dark tile (favicon, profile picture) or, with background=None, in black.
+    big: the larger mark used for site icons, which search results show at about 18 px inside a circle; it
+    still fits inside the circle inscribed in the tile."""
     color, grad = ("#fff", ON_DARK) if background else ("#000", ON_LIGHT)
-    shapes, w = mark(0.54 * size, 0.088 * size, 0.064 * size, color, grad)
+    h, bar, gap = (0.62, 0.1, 0.072) if big else (0.54, 0.088, 0.064)
+    shapes, w = mark(h * size, bar * size, gap * size, color, grad)
     back = f'<rect width="{size}" height="{size}" rx="{0.24 * size:.0f}" fill="{background}"/>' if background else ""
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {size} {size}" role="img" aria-label="Pronunciada">{back}'
             f'<g transform="translate({(size - w) / 2:.1f} {size / 2})">{shapes}</g></svg>\n')
@@ -94,8 +97,22 @@ if __name__ == "__main__":
         (folder / "logo-light.svg").write_text(wordmark("#000000"), encoding="utf-8")
         (folder / "logo-dark.svg").write_text(wordmark("#ffffff"), encoding="utf-8")
     (docs / "logo-mark.svg").write_text(tile(None), encoding="utf-8")
-    (site / "favicon.svg").write_text(tile(), encoding="utf-8")
+    (site / "favicon.svg").write_text(tile(big=True), encoding="utf-8")
     square = "<!doctype html><html><body style='margin:0;background:#0b0b0c'>" + tile().replace("<svg ", "<svg width='256' height='256' ") + "</body></html>"
     render(square, docs / "avatar.png", 256, 256, scale=2)
-    render(square.replace("256", "180"), site / "apple-touch-icon.png", 180, 180, scale=1)
-    print("wrote logo-light.svg, logo-dark.svg, logo-mark.svg, favicon.svg, avatar.png, apple-touch-icon.png")
+
+    def icon(px: int, out):
+        """The site icon as an opaque square PNG of px x px: iOS and search engines round or crop it themselves."""
+        page = ("<!doctype html><html><body style='margin:0;background:#0b0b0c'>"
+                + tile(big=True).replace("<svg ", f"<svg width='{px}' height='{px}' ") + "</body></html>")
+        render(page, out, px, px, scale=1)
+
+    icon(180, site / "apple-touch-icon.png")
+    icon(192, site / "icon-192.png")
+    icon(48, site / "favicon-48.png")
+    # /favicon.ico at the site root, which crawlers request without reading the page
+    import subprocess
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(site / "favicon-48.png"), str(site.parent / "favicon.ico")], check=True)
+    (site / "favicon-48.png").unlink()
+    print("wrote logo-light.svg, logo-dark.svg, logo-mark.svg, favicon.svg, icon-192.png, "
+          "apple-touch-icon.png, ../favicon.ico and avatar.png")
