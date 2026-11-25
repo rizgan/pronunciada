@@ -428,6 +428,10 @@ class Scorer:
             t = time.perf_counter()
             cache = self.explain_away(lpa, cache, dur, self.ea["threshold"], self.ea["max_passes"])
             timing["explain_away"] = (time.perf_counter() - t) * 1e3
+        elif self.lang == "en" and self.omit_cal and not _second:
+            t = time.perf_counter()
+            cache = self._recheck_omission(cache, dur)
+            timing["omission_recheck"] = (time.perf_counter() - t) * 1e3
         pros = None
         if self.prosody is not None:
             t = time.perf_counter()
@@ -582,6 +586,95 @@ class Scorer:
         out["explained"] = sorted(keep)
         out["n_passes"] = len(passes)
         out["first_pass"] = c                      # for benchmarks: the result without the pass
+        return out
+
+    def _recheck_omission(self, c: dict, dur: float) -> dict:
+        """Try freeing the frames of one suspected omission for its immediate neighbours."""
+        from dataclasses import replace
+
+        from .align import score_slots, slots_from_reference
+
+        ref, ev, lpa = c["ref"], c["ev"], c["lpa"]
+        if len(ref.words) < 2:
+            return c
+        present = np.array([_present_prob(self.omit_cal, c["tab"]["llr_del"][slice(*w.phones)])
+                            for w in ref.words])
+        wi = int(present.argmin())
+        if present[wi] >= 0.5:
+            return c
+
+        left, right = max(wi - 1, 0), min(wi + 1, len(ref.words) - 1)
+        a, b = ref.words[left].phones[0], ref.words[right].phones[1]
+        p, q = ref.words[wi].phones
+        start = ev.slots[a - 1].end_frame if a else 0
+        end = ev.slots[b].start_frame if b < len(ev.slots) else len(lpa)
+        if end <= start or end - start > 200 or b - a > 32:
+            return c
+        slots = slots_from_reference(ref)
+        frames = lpa[start:end]
+        reduced = score_slots(frames, slots[a:p] + slots[q:b])
+        original = score_slots(frames, slots[a:b])
+        if reduced.L_can <= original.L_can:
+            return c
+
+        lifted = [replace(slot, start_frame=slot.start_frame + start, end_frame=slot.end_frame + start)
+                  for slot in reduced.slots]
+        adjusted = replace(ev, slots=list(ev.slots))
+        adjusted.slots[a:p] = lifted[:p - a]
+        adjusted.slots[q:b] = lifted[p - a:]
+        tab = F.phone_table(lpa, ref, adjusted, self.native, dur)
+        for key in c["tab"].keys() - tab.keys():
+            tab[key] = c["tab"][key]
+        revised = self._calibrate(tab, ref, dur, c.get("delivery"), c.get("word_pooled"))
+        candidate_words = [j for j in range(left, right + 1) if j != wi]
+        accepted = []
+        for j in candidate_words:
+            span = slice(*ref.words[j].phones)
+            support = _present_prob(self.omit_cal, tab["llr_del"][span])
+            moved = any((old.start_frame, old.end_frame) != (new.start_frame, new.end_frame)
+                        for old, new in zip(ev.slots[span], adjusted.slots[span]))
+            if (moved and present[j] >= 0.5 and support >= present[j]
+                    and revised["w_zl"][j] >= c["w_zl"][j] and revised["w_zs"][j] >= c["w_zs"][j]):
+                accepted.append(j)
+        if not accepted:
+            return c
+
+        # The omitted word has no audio span in the revised alignment. The surviving
+        # neighbouring spans must be ordered even if only one came from the local pass.
+        left_slots = adjusted.slots if wi - 1 in accepted else ev.slots
+        right_slots = adjusted.slots if wi + 1 in accepted else ev.slots
+        before = left_slots[p - 1].end_frame if p else 0
+        after = right_slots[q].start_frame if q < len(ev.slots) else len(lpa)
+        if before > after:
+            return c
+        anchor = min(after, max(before, ev.slots[p].start_frame))
+
+        out = dict(c)
+        out["ev"] = replace(ev, slots=list(ev.slots))
+        out["ev"].slots[p:q] = [replace(slot, start_frame=anchor, end_frame=anchor,
+                                        n_frames=0, alt_index=-1, heard="")
+                                 for slot in ev.slots[p:q]]
+        out["tab"] = {k: v.copy() for k, v in c["tab"].items()}
+        out["W"] = {k: v.copy() for k, v in c["W"].items()}
+        for key, value in (("start_frame", anchor), ("end_frame", anchor), ("n_frames", 0)):
+            out["tab"][key][p:q] = value
+        word_keys = ("w_zl", "w_zs", "w_reg", "w_reg_r2")
+        phone_keys = ("s_zl", "s_zs", "s_reg", "coach_zl", "coach_zs", "contrast_z")
+        for key in word_keys + phone_keys:
+            if c.get(key) is not None:
+                out[key] = c[key].copy()
+        for j in accepted:
+            span = slice(*ref.words[j].phones)
+            out["ev"].slots[span] = adjusted.slots[span]
+            for key, v in out["tab"].items():
+                v[span] = tab[key][span]
+            for key, v in out["W"].items():
+                v[j] = revised["W"][key][j]
+            for key in word_keys:
+                out[key][j] = revised[key][j]
+            for key in phone_keys:
+                if c.get(key) is not None:
+                    out[key][span] = revised[key][span]
         return out
 
     # ------------------------------------------------------------------ calibration

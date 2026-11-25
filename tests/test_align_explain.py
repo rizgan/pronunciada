@@ -74,3 +74,37 @@ def test_all_wild_does_not_crash(ref):
     lp = _lp_for([ids[c] for p in ref.phones for c in p.ipa], seed=3)
     ev = score_reference(lp, ref, wild_slots=range(len(ref.phones)))
     assert all(s.llr_sub == 0.0 for s in ev.slots)
+
+
+def test_english_omission_recheck_keeps_prompt_indices_and_outer_scores(monkeypatch):
+    from types import SimpleNamespace
+
+    from pronunciada import Scorer
+    from pronunciada import acoustic
+    from pronunciada.coach import coaching
+
+    monkeypatch.setenv("PRONUNCIADA_SENTENCE_HEAD", "0")
+    monkeypatch.setattr(acoustic, "AcousticModel",
+                        lambda *args, **kwargs: SimpleNamespace(frame_to_time=lambda f: f * 0.02))
+    sc = Scorer("en", prosody=False, length=False, delivery=False, audio_check=False)
+    reference = "the dog elephant sat at home"
+    control = "the dog sat at home"
+    ids = token_ids()
+    lp = _lp_for([ids[c] for phone in sc.g2p(control).phones for c in phone.ipa])
+    monkeypatch.setattr(sc, "_posteriors", lambda *_: (lp, None, None))
+    audio = np.ones(len(lp) * 320, dtype=np.float32)
+    with monkeypatch.context() as m:
+        m.setattr(sc, "_recheck_omission", lambda cache, _: cache)
+        baseline = sc.score(audio, reference)
+    revised = sc.score(audio, reference)
+    assert [w.text for w in revised.words] == reference.split()
+    assert revised.prob == baseline.prob
+    assert [w.omitted for w in revised.words] == [w.omitted for w in baseline.words]
+    assert [i["word_index"] for i in coaching(revised) if i["kind"] == "missing_word"] == [2]
+    assert revised.words[2].start == revised.words[2].end
+    assert revised.words[2].present_prob == baseline.words[2].present_prob
+    assert revised.words[0] == baseline.words[0]
+    assert revised.words[4:] == baseline.words[4:]
+    assert any(revised.words[i].phones != baseline.words[i].phones for i in (1, 3))
+    assert all(a.end <= b.start for a, b in zip(revised.words, revised.words[1:]))
+    assert sc.rescore(revised, 0.5).words == revised.words
